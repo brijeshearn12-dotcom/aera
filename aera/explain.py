@@ -30,11 +30,11 @@ from config import (
     PROCESSED_DATA_DIR,
     UNHEALTHY_MAX,
 )
-from citypulse.features import (
+from aera.features import (
     filter_modeling_dataset,
     get_feature_columns,
 )
-from citypulse.train import split_time
+from aera.train import split_time
 
 os.environ.setdefault("LOKY_MAX_CPU_COUNT", "4")
 

@@ -27,25 +27,25 @@ from config import (
     PROCESSED_DATA_DIR,
     SAMPLE_DATA_DIR,
 )
-from citypulse.brief import capture_brief_screenshot, generate_brief
-from citypulse.clean import clean, compute_quality_summary, generate_clean_comparison_chart
-from citypulse.explain import (
+from aera.brief import capture_brief_screenshot, generate_brief
+from aera.clean import clean, compute_quality_summary, generate_clean_comparison_chart
+from aera.explain import (
     create_driver_chart,
     create_interval_chart,
     explain_predictions,
     train_quantile_regressors,
 )
-from citypulse.fetch_data import VERIFIED_MUMBAI_STATIONS, fetch_pm25, fetch_weather
-from citypulse.features import compute_features, filter_modeling_dataset
-from citypulse.patterns import (
+from aera.fetch_data import VERIFIED_MUMBAI_STATIONS, fetch_pm25, fetch_weather
+from aera.features import compute_features, filter_modeling_dataset
+from aera.patterns import (
     build_station_hour_heatmap,
     calm_wind_episodes,
     evening_peak,
     persistent_worst_stations,
     render_heatmap_chart,
 )
-from citypulse.recommend import rank_stations
-from citypulse.train import (
+from aera.recommend import rank_stations
+from aera.train import (
     SPLIT_TEST_START,
     create_evaluation_chart,
     evaluate_baselines,

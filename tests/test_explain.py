@@ -5,8 +5,8 @@ import pandas as pd
 import pytest
 
 from config import OUTPUTS_DIR
-from citypulse.explain import FEATURE_PHRASE_MAP
-from citypulse.features import get_feature_columns
+from aera.explain import FEATURE_PHRASE_MAP
+from aera.features import get_feature_columns
 
 
 def test_explanations_parquet_contract():

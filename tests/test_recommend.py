@@ -4,8 +4,8 @@ import pandas as pd
 import pytest
 
 from config import OUTPUTS_DIR
-from citypulse.brief import generate_brief
-from citypulse.recommend import (
+from aera.brief import generate_brief
+from aera.recommend import (
     calculate_severity_weight,
     determine_action,
     rank_stations,

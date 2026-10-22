@@ -5,13 +5,13 @@ import pandas as pd
 import pytest
 
 from config import GOOD_MAX, UNHEALTHY_MAX
-from citypulse.features import (
+from aera.features import (
     classify_pm25,
     compute_features,
     filter_modeling_dataset,
     get_feature_columns,
 )
-from citypulse.train import split_time
+from aera.train import split_time
 
 
 @pytest.fixture

@@ -41,7 +41,7 @@ from config import (
     PROCESSED_DATA_DIR,
     UNHEALTHY_MAX,
 )
-from citypulse.features import (
+from aera.features import (
     classify_pm25,
     compute_features,
     filter_modeling_dataset,

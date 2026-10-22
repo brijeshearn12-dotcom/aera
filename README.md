@@ -26,11 +26,11 @@ Rather than presenting raw, uncalibrated sensor graphs or inventing fine-grained
 
 | Capability | Module | Description |
 |---|---|---|
-| **Discover** | `citypulse/patterns.py` | Detects recurring operational patterns (08:00 diurnal peak $+15.1\%$, calm wind $\le 4.8\,\text{km/h}$ stagnation $+19.7\%$ PM2.5 uplift, persistent worst-corridor rankings) over 90-day baselines. |
-| **Predict** | `citypulse/train.py` | LightGBM Regressor and balanced multi-class Classifier predicting next-24h PM2.5 and 3-tier risk tiers (Good $\le 60$, Unhealthy $>60\text{–}250$, Severe $>250\,\mu\text{g/m}^3$). |
-| **Explain** | `citypulse/explain.py` | Tree SHAP feature attribution mapping top 3 positive and negative contributors into human-readable phrases; 80% conformal prediction intervals. |
-| **Act** | `citypulse/recommend.py` | Ranks stations via explicit severity formula $(p_{\text{unhealthy}} + p_{\text{severe}}) \times \text{weight}$ and assigns deterministic rule-based interventions. |
-| **Brief** | `citypulse/brief.py` | Formats a single-page A4 executive municipal brief with print CSS and headless screenshot rendering. |
+| **Discover** | `aera/patterns.py` | Detects recurring operational patterns (08:00 diurnal peak $+15.1\%$, calm wind $\le 4.8\,\text{km/h}$ stagnation $+19.7\%$ PM2.5 uplift, persistent worst-corridor rankings) over 90-day baselines. |
+| **Predict** | `aera/train.py` | LightGBM Regressor and balanced multi-class Classifier predicting next-24h PM2.5 and 3-tier risk tiers (Good $\le 60$, Unhealthy $>60\text{–}250$, Severe $>250\,\mu\text{g/m}^3$). |
+| **Explain** | `aera/explain.py` | Tree SHAP feature attribution mapping top 3 positive and negative contributors into human-readable phrases; 80% conformal prediction intervals. |
+| **Act** | `aera/recommend.py` | Ranks stations via explicit severity formula $(p_{\text{unhealthy}} + p_{\text{severe}}) \times \text{weight}$ and assigns deterministic rule-based interventions. |
+| **Brief** | `aera/brief.py` | Formats a single-page A4 executive municipal brief with print CSS and headless screenshot rendering. |
 | **Visualize** | `app.py`, `ui/` | Responsive 60/40 dashboard with Folium map, Plotly charts ($\le 3$ simultaneously), WCAG AA ($\ge 4.5:1$) contrast, and full telemetry status. |
 
 ---
@@ -42,28 +42,28 @@ Rather than presenting raw, uncalibrated sensor graphs or inventing fine-grained
         │                           │
         └─────────────┬─────────────┘
                       ▼
-            citypulse/fetch_data.py
+             aera/fetch_data.py
                       │
                       ▼
-            citypulse/clean.py (QA/QC: 1-3h gap fill, stuck & impossible flags)
+             aera/clean.py (QA/QC: 1-3h gap fill, stuck & impossible flags)
                       │
          ┌────────────┴────────────┐
          ▼                         ▼
-citypulse/patterns.py    citypulse/features.py (22 causal features + 2 stand-ins)
+   aera/patterns.py         aera/features.py (22 causal features + 2 stand-ins)
          │                         │
          │                         ▼
-         │               citypulse/train.py (LightGBM regressor & classifier)
+         │                 aera/train.py (LightGBM regressor & classifier)
          │                         │
          │                         ▼
-         │               citypulse/explain.py (SHAP drivers & 80% conformal intervals)
+         │                 aera/explain.py (SHAP drivers & 80% conformal intervals)
          │                         │
          └────────────┬────────────┘
                       ▼
-            citypulse/recommend.py (Severity ranking & deterministic actions)
+              aera/recommend.py (Severity ranking & deterministic actions)
                       │
          ┌────────────┴────────────┐
          ▼                         ▼
-  citypulse/brief.py             app.py (Streamlit UI + Folium Map)
+    aera/brief.py                app.py (Streamlit UI + Folium Map)
 (A4 Printable Brief)      (Interactive Decision Dashboard)
 ```
 
@@ -93,7 +93,7 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 
 # 4. Rebuild full pipeline from committed offline cache (Zero API keys required)
-python -m citypulse.pipeline --cached
+python -m aera.pipeline --cached
 
 # 5. Run test suite
 python -m pytest

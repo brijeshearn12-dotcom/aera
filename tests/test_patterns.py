@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from citypulse.patterns import (
+from aera.patterns import (
     build_station_hour_heatmap,
     calm_wind_episodes,
     evening_peak,

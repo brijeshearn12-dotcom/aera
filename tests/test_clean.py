@@ -13,7 +13,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from citypulse.clean import clean
+from aera.clean import clean
 
 
 def _make_synthetic_weather(timestamps: pd.DatetimeIndex) -> pd.DataFrame:

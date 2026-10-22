@@ -214,7 +214,7 @@ with col_map:
             width="100%",
             height=340,
             returned_objects=["last_object_clicked_tooltip"],
-            key="citypulse_folium_map",
+            key="aera_folium_map",
         )
 
         # Detect map marker click from tooltip
