@@ -1,0 +1,77 @@
+{
+  "generated_at_utc": "2026-10-22T16:59:17.782470+00:00",
+  "analysis_window": {
+    "start": "2025-11-30",
+    "end": "2026-02-28",
+    "days": 90,
+    "total_observations": 14730
+  },
+  "patterns": {
+    "evening_peak": {
+      "title": "Diurnal Peak Concentration",
+      "sentence": "Across Mumbai monitoring stations, PM2.5 concentrations typically peak at 08:00 with a median of 57.8 \u00b5g/m\u00b3, which is 15.1% higher than the overall median of 50.2 \u00b5g/m\u00b3.",
+      "peak_hour": 8,
+      "peak_median": 57.8,
+      "overall_median": 50.2,
+      "percentage_difference": 15.1,
+      "sample_size": 14730,
+      "data_window": {
+        "start": "2025-11-30",
+        "end": "2026-02-28",
+        "days": 91
+      },
+      "weak": false
+    },
+    "calm_wind_episodes": {
+      "title": "Calm-Wind Stagnation Uplift",
+      "sentence": "During calm-wind stagnation episodes (wind speed <= 4.8 km/h lasting at least 3 hours), average PM2.5 rises to 58.9 \u00b5g/m\u00b3 compared to 49.2 \u00b5g/m\u00b3 during ventilated periods (+19.7% difference across 3040 episode observations).",
+      "q1_wind_speed": 4.8,
+      "episode_hours": 433,
+      "calm_mean_pm25": 58.9,
+      "other_mean_pm25": 49.2,
+      "percentage_difference": 19.7,
+      "sample_size": 14730,
+      "data_window": {
+        "start": "2025-11-30",
+        "end": "2026-02-28",
+        "days": 91
+      },
+      "weak": false
+    },
+    "persistent_worst_stations": {
+      "title": "Persistent Worst Stations",
+      "sentence": "Over the last 91 days, the stations with the most frequent Unhealthy air (>60 \u00b5g/m\u00b3) were Kherwadi_Bandra East, Mumbai - MPCB (46.7% of 1779 valid hours), Byculla, Mumbai - BMC (43.3% of 1599 valid hours), and Bandra Kurla Complex, Mumbai - MPCB (38.8% of 1749 valid hours).",
+      "threshold_ug_m3": 60.0,
+      "top_stations": [
+        {
+          "station_id": 3409486,
+          "station_name": "Kherwadi_Bandra East, Mumbai - MPCB",
+          "valid_hours": 1779,
+          "exceedance_hours": 830,
+          "exceedance_percentage": 46.7
+        },
+        {
+          "station_id": 3409510,
+          "station_name": "Byculla, Mumbai - BMC",
+          "valid_hours": 1599,
+          "exceedance_hours": 693,
+          "exceedance_percentage": 43.3
+        },
+        {
+          "station_id": 3409482,
+          "station_name": "Bandra Kurla Complex, Mumbai - MPCB",
+          "valid_hours": 1749,
+          "exceedance_hours": 678,
+          "exceedance_percentage": 38.8
+        }
+      ],
+      "sample_size": 14730,
+      "data_window": {
+        "start": "2025-11-30",
+        "end": "2026-02-28",
+        "days": 91
+      },
+      "weak": false
+    }
+  }
+}

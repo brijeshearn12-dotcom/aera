@@ -77,6 +77,7 @@ citypulse/
 │   └── .gitkeep
 └── tests/
     ├── test_clean.py
+    ├── test_patterns.py
     ├── test_features.py
     ├── test_recommend.py
     └── test_pipeline_smoke.py
@@ -169,7 +170,21 @@ citypulse/
     * Byculla: 74.6% (Fair)
     * Kandivali West: 66.0% (Low)
     * Sewri: 49.4% (Low)
-- patterns.json / heatmap.parquet (S5)
+- patterns.json / heatmap.parquet (S5):
+  - File: `data/outputs/patterns.json`
+  - Structure:
+    * `generated_at_utc`: ISO-8601 UTC timestamp
+    * `analysis_window`: `start`, `end`, `days` (90 days: 2025-11-30 to 2026-02-28), `total_observations` (14,730 valid obs)
+    * `patterns.evening_peak`: `title`, `sentence`, `peak_hour` (8), `peak_median` (57.8 µg/m³), `overall_median` (50.2 µg/m³), `percentage_difference` (+15.1%), `sample_size` (14,730), `data_window`, `weak` (False)
+    * `patterns.calm_wind_episodes`: `title`, `sentence`, `q1_wind_speed` (4.8 km/h), `episode_hours` (433 hrs), `calm_mean_pm25` (58.9 µg/m³), `other_mean_pm25` (49.2 µg/m³), `percentage_difference` (+19.7%), `sample_size` (14,730), `data_window`, `weak` (False)
+    * `patterns.persistent_worst_stations`: `title`, `sentence`, `threshold_ug_m3` (60.0), `top_stations` (ranked list: Kherwadi 46.7%, Byculla 43.3%, BKC 38.8%), `sample_size` (14,730), `data_window`, `weak` (False)
+  - File: `data/outputs/heatmap.parquet`
+  - Schema:
+    * `station_id`: int64 — Station ID
+    * `station_name`: object / string — Station name
+    * `hour`: int64 — Hour of day (0..23 in Asia/Kolkata)
+    * `median_pm25`: float64 — Median PM2.5 concentration for this station-hour
+  - Total records: 216 rows (9 stations x 24 hours), rendered in `data/outputs/heatmap.html` using a single-hue sequential blue scale (`Blues`).
 - feature list, target definition, split rule, baseline metrics (S6)
 - model_metrics.json, predictions.parquet: station_id, predicted_class, p_good, p_unhealthy, p_severe, predicted_pm25, as_of (S7)
 - explanations.parquet: station_id, driver_1..3 (text, direction), lower, upper, quality_label, notes (S8)
@@ -203,6 +218,9 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | 2026-10-22 | S4 | Reindex to canonical regular hourly grid in `Asia/Kolkata` with strictly regular 1h step | Eliminates duplicate timestamps and aligns all 9 stations on a common decision timeline |
 | 2026-10-22 | S4 | Enforce strict QA/QC ordering: impossible (<0, >1000) & stuck (>=6 run) -> reindex -> 1-3h gap fill | Ensures sensor faults (negative values, extreme spikes, flatlines) are never interpolated as valid |
 | 2026-10-22 | S4 | Left join weather on exact hourly timestamp with deduplication guard | Guarantees strictly 1-to-1 join without many-to-many row multiplication |
+| 2026-10-22 | S5 | Use 90-day winter baseline window (2025-11-30 to 2026-02-28) for pattern discovery | Captures seasonal winter stagnation and diurnal dynamics across 14,730 valid records |
+| 2026-10-22 | S5 | Dynamic peak hour detection with honesty guard | Peak identified at 08:00 IST (+15.1% over median); calm wind Q1 <= 4.8 km/h yields +19.7% uplift; neither marked weak |
+| 2026-10-22 | S5 | Single-hue sequential blue scale (`Blues`) for diurnal heatmap | Complies with UI design tokens and contrast standards; exported to `heatmap.html` |
 
 ### Phase A — Data Access Verification Report
 
@@ -272,6 +290,14 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S4 | `citypulse/data/outputs/s4_clean_comparison.html` | created | Plotly before/after comparison chart for BKC station
 - S4 | `citypulse/brain.md` | modified | Updated S4 contracts, decisions, commands, and test logs
 - S4 | `citypulse/TASKS.md` | modified | Marked S4 VERIFIED with evidence
+- S5 | `citypulse/citypulse/patterns.py` | modified | Implemented evening_peak, calm_wind_episodes, persistent_worst_stations, and heatmap builder
+- S5 | `citypulse/tests/test_patterns.py` | created | Unit test suite for pattern discovery, math, weak flags, and ranking
+- S5 | `citypulse/tests/test_pipeline_smoke.py` | modified | Added pattern and heatmap contract smoke tests
+- S5 | `citypulse/data/outputs/patterns.json` | created | Exported 3 operational patterns with plain-language sentences and metrics
+- S5 | `citypulse/data/outputs/heatmap.parquet` | created | 216-row station-by-hour median PM2.5 dataset
+- S5 | `citypulse/data/outputs/heatmap.html` | created | Single-hue sequential blue scale diurnal heatmap visualization
+- S5 | `citypulse/brain.md` | modified | Updated S5 contracts, decisions, command history, and test logs
+- S5 | `citypulse/TASKS.md` | modified | Marked S5 VERIFIED with exact acceptance metrics
 
 ## 9. Commands executed (step, command, result summary)
 - S1 | `py -3.11 -m venv .venv` | Created Python 3.11 virtual environment in `citypulse/.venv`
@@ -295,6 +321,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S3 | `python -m pytest -v` | Ran smoke and contract tests: 4 passed in 1.55s (exit 0)
 - S4 | `python -m citypulse.clean` | Executed cleaning pipeline on real S3 data: 25,920 rows cleaned, quality summary and chart generated (exit 0)
 - S4 | `python -m pytest -v` | Ran test suite: all 11 tests passed in 1.58s (exit 0)
+- S5 | `python -m citypulse.patterns` | Executed pattern discovery on real data: generated patterns.json, heatmap.parquet, heatmap.html (exit 0)
+- S5 | `python -m pytest -v` | Ran full test suite: all 18 tests passed in 1.72s (exit 0)
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -313,6 +341,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S3 | `python -m pytest -v` | Pass (4 passed: test_processed_pm25_contract, test_processed_weather_contract, test_sample_dataset_contract, test_visual_check_output) | 2026-10-22 21:57:55 |
 | S4 | `python -m pytest -v` | Pass (11 passed: 5 in test_clean.py, 6 in test_pipeline_smoke.py, exit 0) | 2026-10-22 22:13:19 |
 | S4 | `python -m citypulse.clean` | Pass (25,920 hourly rows reindexed, 743 gap fills, 135 stuck flags, 83 impossible flags, exit 0) | 2026-10-22 22:12:06 |
+| S5 | `python -m pytest -v` | Pass (18 passed: 5 clean, 6 patterns, 7 smoke contract tests, exit 0) | 2026-10-22 22:30:19 |
+| S5 | `python -m citypulse.patterns` | Pass (Diurnal peak +15.1% at 08:00, calm wind +19.7% uplift, persistent worst stations ranked, exit 0) | 2026-10-22 22:29:19 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
@@ -338,9 +368,10 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S2 | 20 | 16 | 36 | 324 |
 | S3 | 35 | 22 | 58 | 302 |
 | S4 | 25 | 15 | 73 | 287 |
+| S5 | 25 | 14 | 87 | 273 |
 
 ## 15. Exact next action
-Awaiting user approval for Step 4 (Data Cleaning & Quality Flags) completion before proceeding to Step 5 (Discover: 3 patterns). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
+Awaiting user approval for Step 5 (Discover: 3 patterns) completion before proceeding to Step 6 (Features, label, baselines). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

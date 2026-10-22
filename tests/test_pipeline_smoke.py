@@ -170,3 +170,36 @@ def test_quality_summary_contract():
             assert lbl == "Fair"
         else:
             assert lbl == "Low"
+
+
+def test_patterns_and_heatmap_contract():
+    """Verify patterns.json and heatmap.parquet meet S5 contract."""
+    patterns_file = OUTPUTS_DIR / "patterns.json"
+    heatmap_file = OUTPUTS_DIR / "heatmap.parquet"
+    heatmap_html = OUTPUTS_DIR / "heatmap.html"
+
+    assert patterns_file.exists(), "patterns.json does not exist."
+    assert heatmap_file.exists(), "heatmap.parquet does not exist."
+    assert heatmap_html.exists(), "heatmap.html does not exist."
+
+    patterns_data = json.loads(patterns_file.read_text(encoding="utf-8"))
+    assert "patterns" in patterns_data, "patterns key missing in patterns.json"
+    p_dict = patterns_data["patterns"]
+    assert "evening_peak" in p_dict
+    assert "calm_wind_episodes" in p_dict
+    assert "persistent_worst_stations" in p_dict
+
+    # Check each pattern has title, sentence, data_window, weak
+    for p_name, p_val in p_dict.items():
+        assert "title" in p_val, f"title missing in {p_name}"
+        assert "sentence" in p_val, f"sentence missing in {p_name}"
+        assert "data_window" in p_val, f"data_window missing in {p_name}"
+        assert isinstance(p_val["weak"], bool), f"weak must be bool in {p_name}"
+
+    df_heatmap = pd.read_parquet(heatmap_file)
+    expected_cols = ["station_id", "station_name", "hour", "median_pm25"]
+    for col in expected_cols:
+        assert col in df_heatmap.columns, f"Missing column in heatmap: {col}"
+
+    # 9 stations * 24 hours = 216 rows
+    assert len(df_heatmap) == 216, f"Expected 216 heatmap rows, got {len(df_heatmap)}"

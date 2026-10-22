@@ -11,7 +11,7 @@ Update at the end of every step. VERIFIED only with evidence.
 | S2 | Early deployment smoke test | P0 | 20 | S1 | IN PROGRESS | Public URL loads placeholder | Local dashboard verified at 1280px and 390px; clean venv pip check passed with 0 broken reqs; awaiting user deployment URL |
 | S3 | Verify sources, fetch, cache | P0 | 35 | S1 | VERIFIED | Parquet with >= 8 stations, >= 90 days (or approved fallback) | 9 Mumbai stations; 120 days (2025-11-01 to 2026-02-28); 19,989 PM2.5 rows; 2,880 weather rows; 3-station 30-day sample cached; 4 pytest smoke tests passed; s3_check.html generated |
 | S4 | Cleaning and quality flags | P0 | 25 | S3 | VERIFIED | Tests pass; hourly index per station | All 11 unit & contract tests pass (5 in test_clean.py, 6 in test_pipeline_smoke.py); 25,920 regular hourly observations in clean.parquet (9 stations x 2,880 hrs) in Asia/Kolkata; 743 1-3h gap fills; 83 impossible flags (<0 or >1000) removed; 135 stuck flags (>=6 consecutive) removed; quality_summary.parquet saved (7 Fair, 2 Low); before/after comparison chart generated |
-| S5 | Discover: 3 patterns | P0 | 25 | S4 | NOT STARTED | 3 patterns from real data, honest wording | |
+| S5 | Discover: 3 patterns | P0 | 25 | S4 | VERIFIED | 3 patterns from real data, honest wording | 3 patterns derived from real data; Diurnal peak at 08:00 (+15.1% over median); Calm wind Q1 <= 4.8 km/h yields +19.7% uplift; Top 3 worst stations identified (Kherwadi 46.7%, Byculla 43.3%, BKC 38.8%); patterns.json saved; heatmap.parquet (216 rows) saved; heatmap.html generated with single-hue sequential blue scale; 18 unit & contract tests pass |
 | S6 | Features, label, baselines | P0 | 30 | S4 | NOT STARTED | Leakage test passes; split documented; baselines saved | |
 | S7 | Models and evaluation | P0 | 30 | S6 | NOT STARTED | Models saved; honest metrics; pipeline runs | |
 | S8 | Explain: SHAP + intervals | P0 | 25 | S7 | NOT STARTED | Explanations for all stations; coverage reported | |
@@ -42,6 +42,10 @@ Update at the end of every step. VERIFIED only with evidence.
 | S4.2 | Implement 5 synthetic unit tests in tests/test_clean.py and run pytest | VERIFIED | 4 min |
 | S4.3 | Execute real-data cleaning on S3 dataset, produce clean.parquet and quality_summary.parquet | VERIFIED | 3 min |
 | S4.4 | Generate Plotly comparison chart s4_clean_comparison.html and update project docs | VERIFIED | 2 min |
+| S5.1 | Implement evening_peak, calm_wind_episodes, persistent_worst_stations in patterns.py | VERIFIED | 5 min |
+| S5.2 | Implement build_station_hour_heatmap and Plotly single-hue renderer | VERIFIED | 4 min |
+| S5.3 | Implement 6 unit tests in tests/test_patterns.py and verify JSON serialization | VERIFIED | 3 min |
+| S5.4 | Execute on actual cleaned data, export patterns.json and heatmap.parquet, update docs | VERIFIED | 2 min |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |
