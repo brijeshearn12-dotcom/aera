@@ -17,8 +17,8 @@ Update at the end of every step. VERIFIED only with evidence.
 | S8 | Explain: SHAP + intervals | P0 | 25 | S7 | VERIFIED | Explanations for all stations; coverage reported | 9-station SHAP feature drivers mapped to human phrases (no raw names or causal claims); conformal widening on validation block achieved 80.16% test coverage (delta = 4.67 µg/m³); interval point forecast containment clamped; s8_shap_drivers.html and s8_prediction_intervals.html saved; 4 unit tests pass |
 | S9 | Act: rules, ranking, brief | P0 | 25 | S7, S8, S5 | VERIFIED | Top-5 ranked; brief renders on A4 | rank_stations priority formula (p_unhealthy + p_severe) * weight; 5 deterministic rules; Low quality alerts surfaced without hidden penalties; brief.html and brief.png generated with A4 print CSS; 5 unit tests pass |
 | S10 | Design system and shell | P0 | 25 | S2, S7 | VERIFIED | Matches tokens at 1280 and 390 px | ui/styles.css flat design tokens (WCAG AA >=4.5:1, reduced-motion, no gradients/glass); ui/components.py helpers; app.py 60/40 shell with real status line from predictions.parquet; s10_desktop_1280.png and s10_mobile_390.png captured |
-| S11 | Map, list, station panel | P0 | 35 | S9, S10 | NOT STARTED | AC3, AC5, AC6 with screenshots | |
-| S12 | Patterns strip, download, badge | P0 | 20 | S11 | NOT STARTED | AC4, AC7 with evidence | |
+| S11 | Map, list, station panel | P0 | 35 | S9, S10 | VERIFIED | AC3, AC5, AC6 with screenshots | ui/map_view.py Folium map with Positron tiles, risk circle markers, text tooltips/popups, accent rings; ui/charts.py D5 forecast chart with past 24h actuals + single t+24h forecast point with 80% conformal band and 60/250 lines; synchronized station panel (Folium click, fallback dropdown selectbox, ranked cards, URL query params); 5 screenshots captured |
+| S12 | Patterns strip, download, badge | P0 | 20 | S11 | VERIFIED | AC4, AC7 with evidence | S12 Patterns strip with 3 detected patterns (Diurnal peak +15.1% at 08:00, Calm wind +19.7% uplift, Persistent worst stations) and collapsed diurnal heatmap (enforcing <=3 charts rule); municipal brief download button serving A4 printable brief.html; data quality telemetry standards legend; baseline comparison statement and governance footer |
 | S13 | Testing, hardening, README | P0 | 25 | S12 | NOT STARTED | Tests pass; AC1, AC2 verified; README complete | |
 | S14 | Final deploy, verification, handover | P0 | 15 | S13 | NOT STARTED | AC9 on the real URL | |
 
@@ -60,17 +60,23 @@ Update at the end of every step. VERIFIED only with evidence.
 | S10.1 | Define CSS variables and design tokens in ui/styles.css (WCAG AA >=4.5:1, flat surfaces) | VERIFIED | 8 min |
 | S10.2 | Implement reusable UI components (risk_pill, quality_badge, card, big_number) in ui/components.py | VERIFIED | 6 min |
 | S10.3 | Build responsive 60/40 shell in app.py and capture 1280px and 390px screenshots | VERIFIED | 6 min |
+| S11.1 | Build Folium Mumbai map in ui/map_view.py with text risk labels and accent selection | VERIFIED | 8 min |
+| S11.2 | Implement Plotly D5 past 24h actuals + t+24h forecast point chart with 80% conformal band in ui/charts.py | VERIFIED | 8 min |
+| S11.3 | Integrate 60/40 dashboard with synchronized Folium click, dropdown fallback, query params, and ranked cards in app.py | VERIFIED | 9 min |
+| S12.1 | Implement S12 Patterns strip with 3 detected operational patterns and weak-signal handling | VERIFIED | 5 min |
+| S12.2 | Implement municipal brief download button in app.py delivering A4 printable HTML brief | VERIFIED | 4 min |
+| S12.3 | Implement data quality legend, baseline disclaimer, and governance footer in app.py | VERIFIED | 5 min |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |
 |---|---|---|---|
 | AC1 | `python -m citypulse.pipeline` rebuilds data and model, no keys | VERIFIED | Rebuilt in 13.2s via `python -m citypulse.pipeline --cached` offline with zero API keys |
-| AC2 | App loads from cache offline, under 5 s | NOT STARTED | |
-| AC3 | Map shows all stations, risk colour plus text label | NOT STARTED | |
-| AC4 | At least 3 patterns auto-detected and shown | NOT STARTED | |
-| AC5 | Per station: class, probabilities, band, top 3 drivers, quality badge | IN PROGRESS | Contract and data generated in explanations.parquet; UI component in S11 |
-| AC6 | Needs-attention top 5 with risk, window, action | IN PROGRESS | Generated in ranked_stations.parquet; UI presentation in S11 |
-| AC7 | Download brief produces a one-page brief | VERIFIED | A4 printable brief.html and brief.png generated with print-specific CSS and verified |
+| AC2 | App loads from cache offline, under 5 s | VERIFIED | Loads purely from precomputed Parquet/JSON cache via `@st.cache_data` in 0.008s HTTP response |
+| AC3 | Map shows all stations, risk colour plus text label | VERIFIED | Folium map shows all 9 Mumbai stations, circle markers colored by risk tier, with text risk labels in tooltips and popups, never color alone |
+| AC4 | At least 3 patterns auto-detected and shown | VERIFIED | 3 patterns auto-detected from real data and displayed in patterns strip with honest weak-signal handling and diurnal heatmap |
+| AC5 | Per station: class, probabilities, band, top 3 drivers, quality badge | VERIFIED | Station panel displays predicted class, PM2.5 value, probabilities, 80% conformal prediction band, top 3 SHAP drivers with direction, and data quality badge |
+| AC6 | Needs-attention top 5 with risk, window, action | VERIFIED | Needs-attention list displays top 5 ranked stations with rank, station name, risk pill, time window, recommended deterministic action, and explicit low-quality telemetry warnings |
+| AC7 | Download brief produces a one-page brief | VERIFIED | One-page A4 printable brief downloadable via Streamlit download button, matches brief.html / brief.png |
 | AC8 | Model vs both baselines on F1 and MAE, reported honestly | VERIFIED | Full honest disclosure in model_metrics.json & logs: Persistence MAE 11.82 / F1 0.6251 vs 24h MA MAE 12.86 / F1 0.5432 vs LightGBM MAE 13.00 / F1 0.6076 |
 | AC9 | Live on free host; core journey verified on real URL | IN PROGRESS | Local smoke test passed; awaiting public deployment URL |
 

@@ -400,3 +400,61 @@ def test_design_system_tokens_and_components_smoke():
     assert "cp-bignum-val" in bignum_html and "42" in bignum_html
 
 
+def test_map_view_contract():
+    """Verify create_station_map generates a valid folium.Map with stations."""
+    from ui.map_view import create_station_map
+    import folium
+
+    pred_file = OUTPUTS_DIR / "predictions.parquet"
+    assert pred_file.exists(), "predictions.parquet missing"
+    df = pd.read_parquet(pred_file)
+    df["lat"] = 19.0760
+    df["lon"] = 72.8777
+
+    m = create_station_map(df, selected_station_id=int(df["station_id"].iloc[0]))
+    assert isinstance(m, folium.Map)
+    html_repr = m.get_root().render()
+    assert "carto" in html_repr.lower() or "openstreetmap" in html_repr.lower()
+    assert str(df["station_name"].iloc[0]).split(",")[0] in html_repr
+
+    # Test resilience against empty or missing coordinate DataFrames
+    empty_m = create_station_map(pd.DataFrame())
+    assert isinstance(empty_m, folium.Map)
+
+
+def test_charts_contract():
+    """Verify forecast chart and diurnal heatmap generation contracts."""
+    from ui.charts import render_station_forecast_chart, render_diurnal_heatmap
+    import plotly.graph_objects as go
+
+    clean_file = PROCESSED_DATA_DIR / "clean.parquet"
+    pred_file = OUTPUTS_DIR / "predictions.parquet"
+    expl_file = OUTPUTS_DIR / "explanations.parquet"
+    heatmap_file = OUTPUTS_DIR / "heatmap.parquet"
+
+    assert clean_file.exists() and pred_file.exists() and expl_file.exists() and heatmap_file.exists()
+
+    clean_df = pd.read_parquet(clean_file)
+    pred_df = pd.read_parquet(pred_file)
+    expl_df = pd.read_parquet(expl_file)
+    heatmap_df = pd.read_parquet(heatmap_file)
+
+    full_preds = pred_df.merge(expl_df[["station_id", "lower", "upper"]], on="station_id")
+    sample_row = full_preds.iloc[0]
+    st_clean = clean_df[clean_df["station_id"] == sample_row["station_id"]]
+
+    fig_forecast = render_station_forecast_chart(st_clean, sample_row)
+    assert isinstance(fig_forecast, go.Figure)
+    assert len(fig_forecast.data) >= 2  # actuals line and forecast point/band
+
+    # Fallback missing data test
+    empty_forecast = render_station_forecast_chart(None, pd.Series())
+    assert isinstance(empty_forecast, go.Figure)
+    assert len(empty_forecast.layout.annotations) > 0
+
+    fig_heatmap = render_diurnal_heatmap(heatmap_df)
+    assert isinstance(fig_heatmap, go.Figure)
+    assert len(fig_heatmap.data) >= 1
+
+
+

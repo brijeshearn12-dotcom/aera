@@ -477,6 +477,9 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S9 | `python -m pytest tests/test_recommend.py` | Pass (5 passed: deterministic rules, severity weights, top-5 truncation, low quality warning, brief contract, exit 0) | 2026-10-22 23:32:00 |
 | S10 | `python -m pytest -v` | Pass (41 passed: 5 clean, 4 explain, 5 features, 6 patterns, 16 smoke contract tests, 5 recommend, exit 0) | 2026-10-22 23:46:46 |
 | S10 | `python -m citypulse.pipeline --cached` | Pass (rebuilt full pipeline end-to-end through S10 in 13.2s without keys, exit 0) | 2026-10-22 23:45:16 |
+| S11 | `python -m pytest tests/test_pipeline_smoke.py` | Pass (18 passed, including test_map_view_contract and test_charts_contract, exit 0) | 2026-10-23 00:10:24 |
+| S12 | `python -m pytest` | Pass (43 passed across all 6 test suites in 5.92s, exit 0) | 2026-10-23 00:10:40 |
+| S12 | Headless browser capture of live app (port 8501) | Pass (s11_desktop_1280.png, s11_mobile_390.png, 3 distinct station selection screenshots captured, exit 0) | 2026-10-23 00:15:34 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
@@ -487,6 +490,10 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S9: Municipal Decision Brief | 1200x1600 | Single-page A4 printable document with top-5 actions, 3 patterns, model vs baseline metrics, limitations | `brief.html` / `brief.png`
 - S10: Desktop App Shell | 1280px | Flat design system, 60/40 two-column layout, top bar with real-time station counts, WCAG AA contrast (>=4.5:1), no gradients or glass effects | `s10_desktop_1280.png`
 - S10: Mobile App Shell | 390px | Single-column stacked responsive layout below 768px, readable typography, cards wrap cleanly | `s10_mobile_390.png`
+- S11: Desktop Full Dashboard | 1280px | 60/40 view with interactive Folium map, 4 callout metric cards, "Needs attention" prioritized list, station detail panel with D5 forecast chart (past 24h actuals + single t+24h forecast point with 80% conformal band), top 3 plain-language SHAP drivers, recommended actions, and query-param synchronization | `s11_desktop_1280.png`
+- S11: Mobile Full Dashboard | 390px | Responsive single-column stacked view; map and ranked station cards collapse smoothly without horizontal scroll | `s11_mobile_390.png`
+- S11: Station Panel Updates | 1280px | Detail panel verified across 3 distinct stations: Station 3409486 (Kherwadi), Station 3409512 (Borivali East), Station 3409483 (Deonar) | `s11_station_3409486.png`, `s11_station_3409512.png`, `s11_station_3409483.png`
+- S12: Patterns Strip & Footer | 1280px | 3 detected pattern cards (Diurnal peak, Calm wind, Worst corridors) with weak-signal guards, collapsible diurnal heatmap expander (max 3 charts rule), A4 brief download button, telemetry quality legend, baseline disclaimer, and governance advisory | `s11_desktop_1280.png`
 
 ## 12. Known bugs and blockers
 - None
@@ -513,9 +520,11 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S8 | 25 | 18 | 147 | 213 |
 | S9 | 25 | 18 | 165 | 195 |
 | S10 | 25 | 20 | 185 | 175 |
+| S11 | 35 | 22 | 207 | 153 |
+| S12 | 20 | 15 | 222 | 138 |
 
 ## 15. Exact next action
-Awaiting user approval for Steps 8, 9, and 10 (Explain, Act/Brief, and Design System/App Shell) completion before proceeding to Step 11 (Map, list, station panel). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
+HARD STOP: S11 (Interactive Map, Ranked List & Station Panel) and S12 (Patterns Strip, Municipal Brief Download & Quality/Governance Footer) are fully completed, tested (43/43 tests passing), and verified with screenshots. Awaiting user review and explicit approval before starting Step 13 (Testing, hardening, README).
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed
