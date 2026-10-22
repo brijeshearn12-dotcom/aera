@@ -102,3 +102,71 @@ def test_visual_check_output():
     chart_file = OUTPUTS_DIR / "s3_check.html"
     assert chart_file.exists(), "s3_check.html output file does not exist."
     assert chart_file.stat().st_size > 10000, "s3_check.html is suspiciously small or empty."
+
+
+def test_clean_parquet_contract():
+    """Verify clean.parquet exists and meets S4 schema and regularity contract."""
+    clean_file = PROCESSED_DATA_DIR / "clean.parquet"
+    assert clean_file.exists(), "clean.parquet file does not exist."
+
+    df = pd.read_parquet(clean_file)
+    expected_cols = [
+        "timestamp",
+        "station_id",
+        "station_name",
+        "lat",
+        "lon",
+        "pm25",
+        "pm25_filled",
+        "flag_gap",
+        "flag_stuck",
+        "flag_impossible",
+        "temperature",
+        "relative_humidity",
+        "rainfall",
+        "wind_speed",
+        "wind_direction",
+        "boundary_layer_height",
+    ]
+    for col in expected_cols:
+        assert col in df.columns, f"Missing expected column in clean.parquet: {col}"
+
+    # Verify timezone is Asia/Kolkata
+    assert df["timestamp"].dt.tz is not None, "Timestamp must be timezone-aware"
+    assert str(df["timestamp"].dt.tz) == "Asia/Kolkata", f"Expected Asia/Kolkata, got {df['timestamp'].dt.tz}"
+
+    # Verify regular hourly steps per station
+    for st_id, sdf in df.groupby("station_id"):
+        diffs = sdf["timestamp"].diff().dropna().unique()
+        assert len(diffs) == 1, f"Station {st_id} timeline not strictly regular: {diffs}"
+        assert diffs[0] == pd.Timedelta(hours=1), f"Station {st_id} step not 1h: {diffs[0]}"
+        dups = sdf.duplicated(subset=["timestamp"]).sum()
+        assert dups == 0, f"Station {st_id} has duplicate timestamps"
+
+
+def test_quality_summary_contract():
+    """Verify quality_summary.parquet exists and matches contract requirements."""
+    summary_file = OUTPUTS_DIR / "quality_summary.parquet"
+    assert summary_file.exists(), "quality_summary.parquet file does not exist."
+
+    df = pd.read_parquet(summary_file)
+    assert len(df) >= 8, f"Expected at least 8 stations in summary, found {len(df)}"
+
+    required_cols = ["station_id", "station_name", "valid_hours", "total_hours", "data_quality_pct", "quality_label"]
+    for col in required_cols:
+        assert col in df.columns, f"Missing column in quality_summary: {col}"
+
+    # Verify quality labels are within Good, Fair, Low
+    valid_labels = {"Good", "Fair", "Low"}
+    assert set(df["quality_label"].unique()).issubset(valid_labels), f"Invalid quality labels: {df['quality_label'].unique()}"
+
+    # Verify percentage logic matches thresholds
+    for _, row in df.iterrows():
+        pct = row["data_quality_pct"]
+        lbl = row["quality_label"]
+        if pct >= 90.0:
+            assert lbl == "Good"
+        elif pct >= 70.0:
+            assert lbl == "Fair"
+        else:
+            assert lbl == "Low"

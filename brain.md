@@ -120,8 +120,55 @@ citypulse/
     * `wind_direction`: float64 — 10m wind direction (degrees)
     * `boundary_layer_height`: float64 — Boundary layer height (m)
     * `source`: object / string — "Open-Meteo ERA5 / Historical Archive"
-- clean.parquet (S4): timestamp, station_id, station_name, lat, lon, pm25, pm25_filled, flag_gap, flag_stuck, flag_impossible, weather columns
-- quality_summary.parquet (S4): station_id, data_quality_pct, quality_label (Good >= 90, Fair 70-90, Low < 70)
+- clean.parquet (S4):
+  - File: `data/processed/clean.parquet`
+  - Total records: 25,920 regular hourly observations (9 stations x 2,880 hours, 2025-11-01 00:30 to 2026-02-28 23:30 IST)
+  - Timezone: `Asia/Kolkata` (strictly regular 1-hour step, 0 duplicate timestamps)
+  - Columns:
+    * `timestamp`: datetime64[ns, Asia/Kolkata] — Regular hourly observation timestamp in local IST
+    * `station_id`: int64 — OpenAQ numeric station identifier
+    * `station_name`: object / string — Official monitoring station name
+    * `lat`: float64 — Station latitude coordinate
+    * `lon`: float64 — Station longitude coordinate
+    * `pm25`: float64 — Cleaned PM2.5 concentration in µg/m³ (NaN for unfillable gaps, stuck runs, or impossible values)
+    * `pm25_filled`: bool — True if the value was filled via time interpolation (1–3h transmission gap)
+    * `flag_gap`: bool — True if this was an unrecorded transmission slot in raw sensor telemetry
+    * `flag_stuck`: bool — True if part of a run of >=6 consecutive identical valid measurements (set to NaN)
+    * `flag_impossible`: bool — True if raw reading was < 0 or > 1000 µg/m³ (set to NaN)
+    * `temperature`: float64 — 2m air temperature (°C) joined from Open-Meteo
+    * `relative_humidity`: float64 — 2m relative humidity (%) joined from Open-Meteo
+    * `rainfall`: float64 — Precipitation (mm) joined from Open-Meteo
+    * `wind_speed`: float64 — 10m wind speed (km/h) joined from Open-Meteo
+    * `wind_direction`: float64 — 10m wind direction (degrees) joined from Open-Meteo
+    * `boundary_layer_height`: float64 — Boundary layer height (m) joined from Open-Meteo
+  - QA/QC & Missing-Value Policy:
+    1. Deduplication on (station_id, timestamp).
+    2. Range check: values < 0 or > 1000 µg/m³ flagged `flag_impossible=True` and set to NaN.
+    3. Flatline check: runs of >= 6 consecutive identical valid values flagged `flag_stuck=True` and set to NaN.
+    4. Reindexing to continuous hourly grid: unrecorded slots flagged `flag_gap=True`.
+    5. Gap interpolation: only transmission gaps (`flag_gap=True`) of 1–3 consecutive hours bounded by valid observations are interpolated via time interpolation (`pm25_filled=True`).
+    6. Extended gaps (> 3 hours) and invalid telemetry (impossible or stuck) strictly remain missing (`pm25=NaN`, `pm25_filled=False`). No artificial zero-filling.
+    7. Weather join: exact 1-to-1 left join on hourly timestamp; unavailable weather hours remain missing (NaN) without fabrication.
+- quality_summary.parquet (S4):
+  - File: `data/outputs/quality_summary.parquet`
+  - Columns:
+    * `station_id`: int64 — Station identifier
+    * `station_name`: object / string — Station name
+    * `valid_hours`: int64 — Count of non-null PM2.5 hours in the latest 30-day window (720 expected slots)
+    * `total_hours`: int64 — Total expected hourly slots in 30 days (720)
+    * `data_quality_pct`: float64 — Valid-hour percentage (valid_hours / total_hours * 100)
+    * `quality_label`: object / string — Standard quality tier (Good >= 90%, Fair 70–90%, Low < 70%)
+    * `notes`: object / string — Explicit documentation of any historical coverage shortfall
+  - Actual results (latest 30 days: 2026-01-30 to 2026-02-28):
+    * Ghatkopar: 88.1% (Fair)
+    * Kherwadi_Bandra East: 87.4% (Fair)
+    * Mindspace-Malad West: 87.2% (Fair)
+    * Shivaji Nagar: 86.9% (Fair)
+    * Bandra Kurla Complex: 81.8% (Fair)
+    * Chembur: 80.7% (Fair)
+    * Byculla: 74.6% (Fair)
+    * Kandivali West: 66.0% (Low)
+    * Sewri: 49.4% (Low)
 - patterns.json / heatmap.parquet (S5)
 - feature list, target definition, split rule, baseline metrics (S6)
 - model_metrics.json, predictions.parquet: station_id, predicted_class, p_good, p_unhealthy, p_severe, predicted_pm25, as_of (S7)
@@ -153,6 +200,9 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | 2026-10-22 | S3 | Selected 9 verified Mumbai stations covering winter Nov 2025 – Feb 2026 (120 days) | Exceeds minimum criteria (>=8 stations, >=90 days); all located in Mumbai proper |
 | 2026-10-22 | S3 | Sourced 6 matching weather variables from Open-Meteo Historical Archive | Keyless, CC BY 4.0, includes genuine `boundary_layer_height` (2,880 hourly rows) |
 | 2026-10-22 | S3 | Cached 3-station 30-day genuine sample in `data/sample/` with metadata.json | Fully reproducible offline testing without committing raw provider downloads |
+| 2026-10-22 | S4 | Reindex to canonical regular hourly grid in `Asia/Kolkata` with strictly regular 1h step | Eliminates duplicate timestamps and aligns all 9 stations on a common decision timeline |
+| 2026-10-22 | S4 | Enforce strict QA/QC ordering: impossible (<0, >1000) & stuck (>=6 run) -> reindex -> 1-3h gap fill | Ensures sensor faults (negative values, extreme spikes, flatlines) are never interpolated as valid |
+| 2026-10-22 | S4 | Left join weather on exact hourly timestamp with deduplication guard | Guarantees strictly 1-to-1 join without many-to-many row multiplication |
 
 ### Phase A — Data Access Verification Report
 
@@ -214,6 +264,14 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S3 | `citypulse/data/outputs/s3_check.html` | created | Plotly time-series quality verification chart for BKC station
 - S3 | `citypulse/brain.md` | modified | Updated S3 contracts, decisions, command history, and test logs
 - S3 | `citypulse/TASKS.md` | modified | Marked S3 VERIFIED with exact acceptance metrics
+- S4 | `citypulse/citypulse/clean.py` | modified | Implemented cleaning, quality flagging, weather join, and quality summary
+- S4 | `citypulse/tests/test_clean.py` | modified | Implemented 5 contract unit tests using synthetic fixtures
+- S4 | `citypulse/tests/test_pipeline_smoke.py` | modified | Added clean and quality summary schema tests
+- S4 | `citypulse/data/processed/clean.parquet` | created | 25,920 cleaned hourly observations (9 stations x 2,880 hrs)
+- S4 | `citypulse/data/outputs/quality_summary.parquet` | created | 30-day quality metrics per station (7 Fair, 2 Low)
+- S4 | `citypulse/data/outputs/s4_clean_comparison.html` | created | Plotly before/after comparison chart for BKC station
+- S4 | `citypulse/brain.md` | modified | Updated S4 contracts, decisions, commands, and test logs
+- S4 | `citypulse/TASKS.md` | modified | Marked S4 VERIFIED with evidence
 
 ## 9. Commands executed (step, command, result summary)
 - S1 | `py -3.11 -m venv .venv` | Created Python 3.11 virtual environment in `citypulse/.venv`
@@ -235,6 +293,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S2 | `msedge.exe --headless=new --screenshot=... --window-size=390,844` | Captured verified mobile screenshot
 - S3 | `python -m citypulse.fetch_data` | Executed full ingestion: 9 Mumbai stations, 120 days, 19,989 PM2.5 rows, 2,880 weather rows (exit 0)
 - S3 | `python -m pytest -v` | Ran smoke and contract tests: 4 passed in 1.55s (exit 0)
+- S4 | `python -m citypulse.clean` | Executed cleaning pipeline on real S3 data: 25,920 rows cleaned, quality summary and chart generated (exit 0)
+- S4 | `python -m pytest -v` | Ran test suite: all 11 tests passed in 1.58s (exit 0)
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -251,6 +311,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S2 | Mobile viewport 390x844 | Pass (Single-column responsive layout, no horizontal overflow) | 2026-10-22 21:13:57 |
 | S3 | `python -m citypulse.fetch_data` | Pass (9 stations, 120 days, 19,989 PM2.5 obs, 2,880 weather obs, 0 dups, exit 0) | 2026-10-22 21:51:18 |
 | S3 | `python -m pytest -v` | Pass (4 passed: test_processed_pm25_contract, test_processed_weather_contract, test_sample_dataset_contract, test_visual_check_output) | 2026-10-22 21:57:55 |
+| S4 | `python -m pytest -v` | Pass (11 passed: 5 in test_clean.py, 6 in test_pipeline_smoke.py, exit 0) | 2026-10-22 22:13:19 |
+| S4 | `python -m citypulse.clean` | Pass (25,920 hourly rows reindexed, 743 gap fills, 135 stuck flags, 83 impossible flags, exit 0) | 2026-10-22 22:12:06 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
@@ -275,9 +337,10 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S1 | 25 | 20 | 20 | 340 |
 | S2 | 20 | 16 | 36 | 324 |
 | S3 | 35 | 22 | 58 | 302 |
+| S4 | 25 | 15 | 73 | 287 |
 
 ## 15. Exact next action
-Awaiting user approval for Step 3 (Real Mumbai Pollution Data & Offline Cache) completion before proceeding to Step 4 (Cleaning and quality flags). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
+Awaiting user approval for Step 4 (Data Cleaning & Quality Flags) completion before proceeding to Step 5 (Discover: 3 patterns). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

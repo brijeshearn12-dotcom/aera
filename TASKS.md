@@ -10,7 +10,7 @@ Update at the end of every step. VERIFIED only with evidence.
 | S1 | Repo, structure, brain.md, TASKS.md | P0 | 25 | none | VERIFIED | Tree matches plan; pip install ok; config imports | All 34 planned files verified; pip install exit code 0; config imports verified; pytest 0 items collected with 0 errors; git initial commit verified |
 | S2 | Early deployment smoke test | P0 | 20 | S1 | IN PROGRESS | Public URL loads placeholder | Local dashboard verified at 1280px and 390px; clean venv pip check passed with 0 broken reqs; awaiting user deployment URL |
 | S3 | Verify sources, fetch, cache | P0 | 35 | S1 | VERIFIED | Parquet with >= 8 stations, >= 90 days (or approved fallback) | 9 Mumbai stations; 120 days (2025-11-01 to 2026-02-28); 19,989 PM2.5 rows; 2,880 weather rows; 3-station 30-day sample cached; 4 pytest smoke tests passed; s3_check.html generated |
-| S4 | Cleaning and quality flags | P0 | 25 | S3 | NOT STARTED | Tests pass; hourly index per station | |
+| S4 | Cleaning and quality flags | P0 | 25 | S3 | VERIFIED | Tests pass; hourly index per station | All 11 unit & contract tests pass (5 in test_clean.py, 6 in test_pipeline_smoke.py); 25,920 regular hourly observations in clean.parquet (9 stations x 2,880 hrs) in Asia/Kolkata; 743 1-3h gap fills; 83 impossible flags (<0 or >1000) removed; 135 stuck flags (>=6 consecutive) removed; quality_summary.parquet saved (7 Fair, 2 Low); before/after comparison chart generated |
 | S5 | Discover: 3 patterns | P0 | 25 | S4 | NOT STARTED | 3 patterns from real data, honest wording | |
 | S6 | Features, label, baselines | P0 | 30 | S4 | NOT STARTED | Leakage test passes; split documented; baselines saved | |
 | S7 | Models and evaluation | P0 | 30 | S6 | NOT STARTED | Models saved; honest metrics; pipeline runs | |
@@ -38,6 +38,10 @@ Update at the end of every step. VERIFIED only with evidence.
 | S3.2 | Select real Mumbai stations with confirmed PM2.5 history (9 stations) | VERIFIED | 5 min |
 | S3.3 | Implement fetch_pm25, fetch_weather, and caching pipeline in fetch_data.py | VERIFIED | 5 min |
 | S3.4 | Audit station quality, print statistics, generate Plotly visual check, run tests | VERIFIED | 4 min |
+| S4.1 | Implement cleaning, impossible/stuck flagging, gap filling, and weather join in clean.py | VERIFIED | 6 min |
+| S4.2 | Implement 5 synthetic unit tests in tests/test_clean.py and run pytest | VERIFIED | 4 min |
+| S4.3 | Execute real-data cleaning on S3 dataset, produce clean.parquet and quality_summary.parquet | VERIFIED | 3 min |
+| S4.4 | Generate Plotly comparison chart s4_clean_comparison.html and update project docs | VERIFIED | 2 min |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |
