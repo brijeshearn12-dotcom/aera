@@ -51,7 +51,7 @@ def create_station_map(
     m = folium.Map(
         location=MUMBAI_CENTER,
         zoom_start=DEFAULT_ZOOM,
-        tiles="cartodbpositron",
+        tiles="OpenStreetMap",
         control_scale=True,
         prefer_canvas=True,
     )
