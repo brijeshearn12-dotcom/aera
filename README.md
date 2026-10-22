@@ -1,4 +1,4 @@
-# CityPulse: Mumbai Air Quality Decision Support System
+# AERA: Mumbai Air Quality Decision Support System
 
 Next-24-hour PM2.5 pollution risk forecasting, causal pattern discovery, and operational decision support for municipal pollution-control officers in Mumbai, Maharashtra.
 
@@ -11,9 +11,9 @@ Next-24-hour PM2.5 pollution risk forecasting, causal pattern discovery, and ope
 
 ## 1. Project Purpose & System Overview
 
-**CityPulse** is an operational decision-support tool engineered specifically for municipal environmental engineers and pollution-control officers across the Brihanmumbai Municipal Corporation (BMC) jurisdiction. 
+**AERA** (Air Environment Risk Assessment) is an operational decision-support tool engineered specifically for municipal environmental engineers and pollution-control officers across the Brihanmumbai Municipal Corporation (BMC) jurisdiction. 
 
-Rather than presenting raw, uncalibrated sensor graphs or inventing fine-grained hourly forecasts that exceed meteorological predictability, CityPulse delivers:
+Rather than presenting raw, uncalibrated sensor graphs or inventing fine-grained hourly forecasts that exceed meteorological predictability, AERA delivers:
 - **Decision D5 Forecasts**: A transparent time-series view linking the past 24 hours of verified ground observations directly to a single $t+24\text{h}$ ahead categorical risk forecast and continuous PM2.5 prediction interval.
 - **Conformal Uncertainty Bands**: Asymmetric 80% prediction intervals calibrated via split conformal inference on holdout observations (achieving 80.16% empirical coverage).
 - **Interpretable SHAP Attribution**: Plain-language feature drivers explaining *why* a station's risk is elevated (without raw feature jargon or false causal claims).

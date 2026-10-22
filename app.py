@@ -32,7 +32,7 @@ from ui.map_view import create_station_map
 # Streamlit Page Configuration
 # -----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="CityPulse - Mumbai Air Quality Decision Support",
+    page_title="AERA - Mumbai Air Quality Decision Support",
     page_icon="🌫️",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -165,7 +165,7 @@ st.markdown(
     f"""
     <div class="cp-topbar">
       <div class="cp-brand-group">
-        <span class="cp-logo">CityPulse</span>
+        <span class="cp-logo">AERA</span>
         <span class="cp-city-tag">Mumbai Decision Support</span>
       </div>
       <div class="cp-status-line">
@@ -511,9 +511,9 @@ if brief_file.exists():
     brief_bytes = brief_file.read_bytes()
     brief_date_slug = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     st.download_button(
-        label="📄 Download Municipal Decision Brief (One-Page A4 Printable HTML)",
+        label="📄 Download AERA Municipal Decision Brief (One-Page A4 Printable HTML)",
         data=brief_bytes,
-        file_name=f"citypulse_brief_mumbai_{brief_date_slug}.html",
+        file_name=f"aera_brief_mumbai_{brief_date_slug}.html",
         mime="text/html",
         use_container_width=True,
     )
