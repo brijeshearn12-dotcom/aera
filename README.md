@@ -78,8 +78,8 @@ citypulse/patterns.py    citypulse/features.py (22 causal features + 2 stand-ins
 ### Quickstart
 ```bash
 # 1. Clone repository
-git clone https://github.com/brijeshearn12-dotcom/citypulse.git
-cd citypulse
+git clone https://github.com/brijeshearn12-dotcom/aera.git
+cd aera
 
 # 2. Set up virtual environment
 python -m venv .venv
@@ -170,7 +170,7 @@ To protect municipal officers from overconfident point forecasts:
 1. Fork or push this repository to GitHub.
 2. Sign in to [Streamlit Community Cloud](https://share.streamlit.io/).
 3. Click **New app** and select:
-   - **Repository:** `brijeshearn12-dotcom/citypulse`
+   - **Repository:** `brijeshearn12-dotcom/aera`
    - **Branch:** `main`
    - **Main file path:** `app.py`
 4. In **Advanced settings**, set Python to `3.11`. No environment secrets or API keys are required.
