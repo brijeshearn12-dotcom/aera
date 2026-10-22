@@ -8,7 +8,7 @@ Update at the end of every step. VERIFIED only with evidence.
 | ID | Task | Pri | Min | Depends on | Status | Acceptance (short) | Evidence |
 |---|---|---|---|---|---|---|---|
 | S1 | Repo, structure, brain.md, TASKS.md | P0 | 25 | none | VERIFIED | Tree matches plan; pip install ok; config imports | All 34 planned files verified; pip install exit code 0; config imports verified; pytest 0 items collected with 0 errors; git initial commit verified |
-| S2 | Early deployment smoke test | P0 | 20 | S1 | NOT STARTED | Public URL loads placeholder | |
+| S2 | Early deployment smoke test | P0 | 20 | S1 | IN PROGRESS | Public URL loads placeholder | Local dashboard verified at 1280px and 390px; clean venv pip check passed with 0 broken reqs; awaiting user deployment URL |
 | S3 | Verify sources, fetch, cache | P0 | 35 | S1 | NOT STARTED | Parquet with >= 8 stations, >= 90 days (or approved fallback) | |
 | S4 | Cleaning and quality flags | P0 | 25 | S3 | NOT STARTED | Tests pass; hourly index per station | |
 | S5 | Discover: 3 patterns | P0 | 25 | S4 | NOT STARTED | 3 patterns from real data, honest wording | |
@@ -29,6 +29,11 @@ Update at the end of every step. VERIFIED only with evidence.
 | S1.2 | Setup Python 3.11 virtual environment and install dependencies | VERIFIED | 10 min |
 | S1.3 | Verify test runner (pytest) and configuration imports | VERIFIED | 2 min |
 | S1.4 | Initialize Git repository, verify exclusions, and record baseline commit | VERIFIED | 3 min |
+| S2.1 | Implement minimal Streamlit dashboard and global font CSS | VERIFIED | 4 min |
+| S2.2 | Verify local execution and capture desktop (1280px) and mobile (390px) screenshots | VERIFIED | 5 min |
+| S2.3 | Validate clean virtual environment reproducibility and pip check | VERIFIED | 5 min |
+| S2.4 | Update README and prepare Git commit/push | VERIFIED | 2 min |
+| S2.5 | Verify live public deployment URL on Streamlit Community Cloud | IN PROGRESS | Awaiting user URL |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |
@@ -41,7 +46,7 @@ Update at the end of every step. VERIFIED only with evidence.
 | AC6 | Needs-attention top 5 with risk, window, action | NOT STARTED | |
 | AC7 | Download brief produces a one-page brief | NOT STARTED | |
 | AC8 | Model vs both baselines on F1 and MAE, reported honestly | NOT STARTED | |
-| AC9 | Live on free host; core journey verified on real URL | NOT STARTED | |
+| AC9 | Live on free host; core journey verified on real URL | IN PROGRESS | Local smoke test passed; awaiting public deployment URL |
 
 ## Deferred (optional) items
 | Item | Status | Reason |

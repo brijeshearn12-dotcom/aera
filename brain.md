@@ -23,12 +23,14 @@ NOT STARTED | IN PROGRESS | BLOCKED | VERIFIED | DEFERRED
 - Out of scope: street-level prediction, traffic/industry data, public alerts, any paid API or LLM.
 - Acceptance criteria AC1 to AC9: see TASKS.md.
 - Success measure: F1 on Unhealthy-or-worse on a held-out block, beating persistence and 24h moving average.
+- S2 scope: Minimal Streamlit dashboard and deployment readiness smoke test. Displays title, subtitle, version (v0.1.0), prominent placeholder warning, and mock illustrative station table. No live sensors, no data fetching, no ML models.
 
 ## 2. Stack and architecture
 - Python 3.11, pandas, pyarrow, scikit-learn, LightGBM, statsmodels, SHAP, Streamlit, streamlit-folium, Folium, Plotly, Jinja2, requests, pytest, joblib.
 - Host: Streamlit Community Cloud (backup: Hugging Face Spaces, Streamlit SDK).
 - Data flow: sources -> fetch_data -> clean -> processed parquet -> patterns / features -> train -> explain -> recommend -> outputs parquet/json -> app.py + brief.py.
 - The app reads only data/outputs and data/sample. It never trains or fetches.
+- S2 implementation: Single lightweight entrypoint `app.py` injecting global CSS font from `ui/styles.css` using `st.markdown`, rendering native Streamlit headers, warning callouts, and dataframes.
 
 ## 3. Directory tree
 ```text
@@ -105,7 +107,7 @@ citypulse/
 | CITY | Mumbai | Documented default; real value lives in config.py |
 | DATA_MODE | cached | cached = read committed data, live = refetch |
 
-Hosting needs no secrets. If a secret ever appears, STOP and record it in section 12.
+Hosting needs no secrets. For S2, no secrets or API keys are required.
 
 ## 7. Decisions log (date/time, step, decision, reason)
 | When | Step | Decision | Reason |
@@ -118,6 +120,8 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 | 2026-10-22 | S1 | Installed Python 3.11.9 via winget (`--scope user`) | Python 3.11 environment required for reproducibility and parity |
 | 2026-10-22 | S1 | Direct dependencies pinned strictly to stable releases | Ensure reproducible builds across local and cloud environments |
 | 2026-10-22 | S1 | Directory `.gitkeep` files force-tracked for ignored folders | Allows keeping empty data/raw and models directories tracked while ignoring contents |
+| 2026-10-22 | S2 | `ui/styles.css` path resolved via `Path(__file__).parent / "ui" / "styles.css"` with try-except fallback | Prevents hardcoded paths and handles missing file gracefully |
+| 2026-10-22 | S2 | Validated dependency reproducibility in clean external venv `.citypulse-verify-venv` | Proves environment rebuildability; `pip check` confirmed 0 broken reqs |
 
 ## 8. Files created or modified (step, file, created/modified, one-line purpose)
 - S1 | `citypulse/.env.example` | created | Example environment variable template
@@ -154,6 +158,11 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 - S1 | `citypulse/tests/test_features.py` | created | Features test placeholder module
 - S1 | `citypulse/tests/test_recommend.py` | created | Recommendation test placeholder module
 - S1 | `citypulse/tests/test_pipeline_smoke.py` | created | Smoke test placeholder module
+- S2 | `citypulse/app.py` | modified | Minimal Streamlit dashboard with title, version, warning, and mock table
+- S2 | `citypulse/ui/styles.css` | modified | Added standard font family rule
+- S2 | `citypulse/README.md` | modified | Added comprehensive local run and Streamlit Community Cloud deployment guide
+- S2 | `citypulse/TASKS.md` | modified | Updated S2 tracking to IN PROGRESS awaiting cloud deployment URL
+- S2 | `citypulse/brain.md` | modified | Updated S2 state, screenshots, and test outcomes
 
 ## 9. Commands executed (step, command, result summary)
 - S1 | `py -3.11 -m venv .venv` | Created Python 3.11 virtual environment in `citypulse/.venv`
@@ -165,6 +174,14 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 - S1 | `git check-ignore -v data/outputs/predictions.parquet data/outputs/patterns.json data/sample` | Confirmed outputs and sample folders are tracked/not ignored (exit 1, no output)
 - S1 | `git commit -m "chore: initialize CityPulse project skeleton"` | Initial commit recorded
 - S1 | `git remote add origin https://github.com/brijeshearn12-dotcom/citypulse.git && git push -u origin main` | Pushed initial skeleton to GitHub remote repository (exit 0)
+- S2 | `py -3.11 -m venv .citypulse-verify-venv` | Created temporary clean verification virtual environment
+- S2 | `pip install -r requirements.txt` in `.citypulse-verify-venv` | All 14 pinned requirements installed cleanly (exit 0)
+- S2 | `pip check` in `.citypulse-verify-venv` | Output: "No broken requirements found." (exit 0)
+- S2 | `pip freeze` in `.citypulse-verify-venv` | Verified exact versions against requirements.txt (exit 0)
+- S2 | `Remove-Item .citypulse-verify-venv` | Safely deleted temporary environment after validation
+- S2 | `streamlit run app.py` | Launched local Streamlit instance on port 8501 (daemon)
+- S2 | `msedge.exe --headless=new --screenshot=... --window-size=1280,800` | Captured verified desktop screenshot
+- S2 | `msedge.exe --headless=new --screenshot=... --window-size=390,844` | Captured verified mobile screenshot
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -174,9 +191,16 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 | S1 | `pytest` | Pass (collected 0 items, 0 errors, no tests ran) | 2026-10-22 20:44:40 |
 | S1 | Directory Structure Verification | Pass (34 files matching tree exactly) | 2026-10-22 20:45:02 |
 | S1 | Git Ignore & Staging Verification | Pass (ignored paths excluded, required tracked) | 2026-10-22 20:46:21 |
+| S2 | Clean venv pip install | Pass (clean install of all 14 packages, exit 0) | 2026-10-22 21:06:40 |
+| S2 | Clean venv `pip check` | Pass ("No broken requirements found.", exit 0) | 2026-10-22 21:07:20 |
+| S2 | Local Streamlit launch | Pass (app rendered on http://localhost:8501 without traceback) | 2026-10-22 21:09:44 |
+| S2 | Desktop viewport 1280x800 | Pass (Title, subtitle, v0.1.0, warning banner, table rendered) | 2026-10-22 21:13:05 |
+| S2 | Mobile viewport 390x844 | Pass (Single-column responsive layout, no horizontal overflow) | 2026-10-22 21:13:57 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
+- S2: Desktop Home | 1280px | Title, subtitle, v0.1.0, warning callout, and 5-row table render cleanly on light background | `desktop_1280x800.png`
+- S2: Mobile Home | 390px | Card-like responsive layout, text wraps cleanly, table scrolls naturally without page-level horizontal overflow | `mobile_390x844.png`
 
 ## 12. Known bugs and blockers
 - None
@@ -185,8 +209,8 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 - Repo URL: https://github.com/brijeshearn12-dotcom/citypulse.git
 - Host: Streamlit Community Cloud
 - Main file: app.py | Python: 3.11 (set in Advanced settings) | Secrets: none
-- Live URL: (none yet. Never invent one.)
-- Smoke test (S2): NOT STARTED
+- Live URL: (none yet. Never invent one. Awaiting user clicks and URL.)
+- Smoke test (S2): IN PROGRESS (Local verified, awaiting cloud deployment)
 - Final verification (S14): NOT STARTED
 - Evidence: (log excerpts, screenshot paths)
 
@@ -194,9 +218,10 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 | Step | Planned min | Actual min | Cumulative | Remaining of 360 |
 |---|---|---|---|---|
 | S1 | 25 | 20 | 20 | 340 |
+| S2 | 20 | 16 | 36 | 324 |
 
 ## 15. Exact next action
-Wait for user approval before starting S2.
+Awaiting user to deploy repository on Streamlit Community Cloud and provide the public URL. Once provided, verify the live URL and complete S2.
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

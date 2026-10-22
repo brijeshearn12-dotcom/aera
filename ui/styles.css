@@ -1,0 +1,5 @@
+html,
+body,
+[class*="css"] {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif;
+}
