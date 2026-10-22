@@ -92,7 +92,34 @@ citypulse/
 
 ## 5. Data models and API contracts
 (Filled as each step defines a schema. Each schema is a contract; later steps must not change it silently.)
-- raw/processed PM2.5 (S3): timestamp_utc, timestamp_ist, station_id, station_name, lat, lon, pm25
+- raw/processed PM2.5 (S3):
+  - File: `data/processed/pm25_observed.parquet`
+  - Columns:
+    * `timestamp_utc`: datetime64[ns, UTC] — Timezone-aware UTC observation time
+    * `timestamp_ist`: datetime64[ns, Asia/Kolkata] — Corresponding IST observation time
+    * `station_id`: int64 — OpenAQ numeric location identifier
+    * `station_name`: object / string — Provider station name (e.g. "Bandra Kurla Complex, Mumbai - MPCB")
+    * `lat`: float64 — Station latitude coordinate
+    * `lon`: float64 — Station longitude coordinate
+    * `pm25`: float64 — Real hourly mean concentration (derived from available 15-min telemetry)
+    * `units`: object / string — Measurement unit (`µg/m³`)
+    * `source`: object / string — Source provenance ("OpenAQ S3 Archive / CPCB-MPCB")
+    * `raw_obs_count`: int64 — Number of raw 15-min telemetry readings in the hour
+  - Missing values: Genuine missing hours are preserved as absent rows; no interpolation or artificial zero-filling in S3.
+- processed Weather (S3):
+  - File: `data/processed/weather_observed.parquet`
+  - Columns:
+    * `timestamp_utc`: datetime64[ns, UTC] — Timezone-aware UTC timestamp
+    * `timestamp_ist`: datetime64[ns, Asia/Kolkata] — Corresponding IST timestamp
+    * `lat`: float64 — Mumbai centroid latitude (19.0760)
+    * `lon`: float64 — Mumbai centroid longitude (72.8777)
+    * `temperature`: float64 — 2m air temperature (°C)
+    * `relative_humidity`: float64 — 2m relative humidity (%)
+    * `rainfall`: float64 — Precipitation (mm)
+    * `wind_speed`: float64 — 10m wind speed (km/h)
+    * `wind_direction`: float64 — 10m wind direction (degrees)
+    * `boundary_layer_height`: float64 — Boundary layer height (m)
+    * `source`: object / string — "Open-Meteo ERA5 / Historical Archive"
 - clean.parquet (S4): timestamp, station_id, station_name, lat, lon, pm25, pm25_filled, flag_gap, flag_stuck, flag_impossible, weather columns
 - quality_summary.parquet (S4): station_id, data_quality_pct, quality_label (Good >= 90, Fair 70-90, Low < 70)
 - patterns.json / heatmap.parquet (S5)
@@ -122,6 +149,20 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | 2026-10-22 | S1 | Directory `.gitkeep` files force-tracked for ignored folders | Allows keeping empty data/raw and models directories tracked while ignoring contents |
 | 2026-10-22 | S2 | `ui/styles.css` path resolved via `Path(__file__).parent / "ui" / "styles.css"` with try-except fallback | Prevents hardcoded paths and handles missing file gracefully |
 | 2026-10-22 | S2 | Validated dependency reproducibility in clean external venv `.citypulse-verify-venv` | Proves environment rebuildability; `pip check` confirmed 0 broken reqs |
+| 2026-10-22 | S3 | Ingest real PM2.5 from OpenAQ S3 public archive (`records/csv.gz/locationid=...`) | OpenAQ REST API v1/v2 retired (410), v3 requires API key (401), but public S3 bucket is accessible anonymously via HTTPS (200) |
+| 2026-10-22 | S3 | Selected 9 verified Mumbai stations covering winter Nov 2025 – Feb 2026 (120 days) | Exceeds minimum criteria (>=8 stations, >=90 days); all located in Mumbai proper |
+| 2026-10-22 | S3 | Sourced 6 matching weather variables from Open-Meteo Historical Archive | Keyless, CC BY 4.0, includes genuine `boundary_layer_height` (2,880 hourly rows) |
+| 2026-10-22 | S3 | Cached 3-station 30-day genuine sample in `data/sample/` with metadata.json | Fully reproducible offline testing without committing raw provider downloads |
+
+### Phase A — Data Access Verification Report
+
+| Source | Actual endpoint | HTTP result | Authentication | Coverage/result | Terms |
+|---|---|---|---|---|---|
+| OpenAQ API v1/v2 | `https://api.openaq.org/v2/locations?city=Mumbai` | 410 Gone | None | Endpoints retired; instructs migration to v3 | [OpenAQ Legal](https://openaq.org/about/legal/) |
+| OpenAQ API v3 | `https://api.openaq.org/v3/locations` | 401 Unauthorized | API Key (`X-API-Key`) | Free registration required for REST endpoint | [OpenAQ Terms](https://docs.openaq.org/docs/terms-of-use) |
+| OpenAQ S3 Public Archive | `https://openaq-data-archive.s3.amazonaws.com/records/csv.gz/locationid={id}/...` | 200 OK | Anonymous / None | 9 Mumbai stations, 2025-11-01 to 2026-02-28, 19,989 hourly records | [AWS Open Data](https://registry.opendata.aws/openaq/) / [OpenAQ Legal](https://openaq.org/about/legal/) |
+| Open-Meteo Weather Archive | `https://archive-api.open-meteo.com/v1/archive` | 200 OK | Anonymous / None | 2,880 hourly rows (temp, RH, rain, wind spd/dir, boundary layer height) | [Open-Meteo Terms](https://open-meteo.com/en/terms) (CC BY 4.0) |
+| Open-Meteo Air Quality | `https://air-quality-api.open-meteo.com/v1/air-quality` | 200 OK | Anonymous / None | Modelled PM2.5 available (2,880 rows); kept separate, not merged into observations | [Open-Meteo Terms](https://open-meteo.com/en/terms) (CC BY 4.0) |
 
 ## 8. Files created or modified (step, file, created/modified, one-line purpose)
 - S1 | `citypulse/.env.example` | created | Example environment variable template
@@ -163,6 +204,16 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S2 | `citypulse/README.md` | modified | Added comprehensive local run and Streamlit Community Cloud deployment guide
 - S2 | `citypulse/TASKS.md` | modified | Updated S2 tracking to IN PROGRESS awaiting cloud deployment URL
 - S2 | `citypulse/brain.md` | modified | Updated S2 state, screenshots, and test outcomes
+- S3 | `citypulse/citypulse/fetch_data.py` | modified | Real PM2.5 (OpenAQ S3) and weather (Open-Meteo) ingestion and caching pipeline
+- S3 | `citypulse/tests/test_pipeline_smoke.py` | modified | Added data contract tests for PM2.5, weather, sample, and Plotly visual check
+- S3 | `citypulse/data/processed/pm25_observed.parquet` | created | 19,989 real hourly PM2.5 records across 9 Mumbai stations (120 days)
+- S3 | `citypulse/data/processed/weather_observed.parquet` | created | 2,880 hourly weather records with 6 variables for Mumbai (120 days)
+- S3 | `citypulse/data/sample/pm25_sample.parquet` | created | 3-station 30-day real PM2.5 sample dataset (1,936 records)
+- S3 | `citypulse/data/sample/weather_sample.parquet` | created | 30-day matching weather sample dataset (720 records)
+- S3 | `citypulse/data/sample/metadata.json` | created | Metadata, provenance, coordinates, and license information for cached sample
+- S3 | `citypulse/data/outputs/s3_check.html` | created | Plotly time-series quality verification chart for BKC station
+- S3 | `citypulse/brain.md` | modified | Updated S3 contracts, decisions, command history, and test logs
+- S3 | `citypulse/TASKS.md` | modified | Marked S3 VERIFIED with exact acceptance metrics
 
 ## 9. Commands executed (step, command, result summary)
 - S1 | `py -3.11 -m venv .venv` | Created Python 3.11 virtual environment in `citypulse/.venv`
@@ -182,6 +233,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S2 | `streamlit run app.py` | Launched local Streamlit instance on port 8501 (daemon)
 - S2 | `msedge.exe --headless=new --screenshot=... --window-size=1280,800` | Captured verified desktop screenshot
 - S2 | `msedge.exe --headless=new --screenshot=... --window-size=390,844` | Captured verified mobile screenshot
+- S3 | `python -m citypulse.fetch_data` | Executed full ingestion: 9 Mumbai stations, 120 days, 19,989 PM2.5 rows, 2,880 weather rows (exit 0)
+- S3 | `python -m pytest -v` | Ran smoke and contract tests: 4 passed in 1.55s (exit 0)
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -196,6 +249,8 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S2 | Local Streamlit launch | Pass (app rendered on http://localhost:8501 without traceback) | 2026-10-22 21:09:44 |
 | S2 | Desktop viewport 1280x800 | Pass (Title, subtitle, v0.1.0, warning banner, table rendered) | 2026-10-22 21:13:05 |
 | S2 | Mobile viewport 390x844 | Pass (Single-column responsive layout, no horizontal overflow) | 2026-10-22 21:13:57 |
+| S3 | `python -m citypulse.fetch_data` | Pass (9 stations, 120 days, 19,989 PM2.5 obs, 2,880 weather obs, 0 dups, exit 0) | 2026-10-22 21:51:18 |
+| S3 | `python -m pytest -v` | Pass (4 passed: test_processed_pm25_contract, test_processed_weather_contract, test_sample_dataset_contract, test_visual_check_output) | 2026-10-22 21:57:55 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
@@ -219,9 +274,10 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 |---|---|---|---|---|
 | S1 | 25 | 20 | 20 | 340 |
 | S2 | 20 | 16 | 36 | 324 |
+| S3 | 35 | 22 | 58 | 302 |
 
 ## 15. Exact next action
-Awaiting user to deploy repository on Streamlit Community Cloud and provide the public URL. Once provided, verify the live URL and complete S2.
+Awaiting user approval for Step 3 (Real Mumbai Pollution Data & Offline Cache) completion before proceeding to Step 4 (Cleaning and quality flags). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

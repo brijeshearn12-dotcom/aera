@@ -9,7 +9,7 @@ Update at the end of every step. VERIFIED only with evidence.
 |---|---|---|---|---|---|---|---|
 | S1 | Repo, structure, brain.md, TASKS.md | P0 | 25 | none | VERIFIED | Tree matches plan; pip install ok; config imports | All 34 planned files verified; pip install exit code 0; config imports verified; pytest 0 items collected with 0 errors; git initial commit verified |
 | S2 | Early deployment smoke test | P0 | 20 | S1 | IN PROGRESS | Public URL loads placeholder | Local dashboard verified at 1280px and 390px; clean venv pip check passed with 0 broken reqs; awaiting user deployment URL |
-| S3 | Verify sources, fetch, cache | P0 | 35 | S1 | NOT STARTED | Parquet with >= 8 stations, >= 90 days (or approved fallback) | |
+| S3 | Verify sources, fetch, cache | P0 | 35 | S1 | VERIFIED | Parquet with >= 8 stations, >= 90 days (or approved fallback) | 9 Mumbai stations; 120 days (2025-11-01 to 2026-02-28); 19,989 PM2.5 rows; 2,880 weather rows; 3-station 30-day sample cached; 4 pytest smoke tests passed; s3_check.html generated |
 | S4 | Cleaning and quality flags | P0 | 25 | S3 | NOT STARTED | Tests pass; hourly index per station | |
 | S5 | Discover: 3 patterns | P0 | 25 | S4 | NOT STARTED | 3 patterns from real data, honest wording | |
 | S6 | Features, label, baselines | P0 | 30 | S4 | NOT STARTED | Leakage test passes; split documented; baselines saved | |
@@ -34,6 +34,10 @@ Update at the end of every step. VERIFIED only with evidence.
 | S2.3 | Validate clean virtual environment reproducibility and pip check | VERIFIED | 5 min |
 | S2.4 | Update README and prepare Git commit/push | VERIFIED | 2 min |
 | S2.5 | Verify live public deployment URL on Streamlit Community Cloud | IN PROGRESS | Awaiting user URL |
+| S3.1 | Verify source access (OpenAQ S3 archive, Open-Meteo weather & air quality) | VERIFIED | 8 min |
+| S3.2 | Select real Mumbai stations with confirmed PM2.5 history (9 stations) | VERIFIED | 5 min |
+| S3.3 | Implement fetch_pm25, fetch_weather, and caching pipeline in fetch_data.py | VERIFIED | 5 min |
+| S3.4 | Audit station quality, print statistics, generate Plotly visual check, run tests | VERIFIED | 4 min |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |
