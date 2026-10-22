@@ -164,6 +164,7 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 - S1 | `git check-ignore .venv/ data/raw/ models/ .env` | Confirmed all 4 paths are correctly ignored (exit 0)
 - S1 | `git check-ignore -v data/outputs/predictions.parquet data/outputs/patterns.json data/sample` | Confirmed outputs and sample folders are tracked/not ignored (exit 1, no output)
 - S1 | `git commit -m "chore: initialize CityPulse project skeleton"` | Initial commit recorded
+- S1 | `git remote add origin https://github.com/brijeshearn12-dotcom/citypulse.git && git push -u origin main` | Pushed initial skeleton to GitHub remote repository (exit 0)
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -181,7 +182,7 @@ Hosting needs no secrets. If a secret ever appears, STOP and record it in sectio
 - None
 
 ## 13. Deployment configuration and status
-- Repo URL: (none yet)
+- Repo URL: https://github.com/brijeshearn12-dotcom/citypulse.git
 - Host: Streamlit Community Cloud
 - Main file: app.py | Python: 3.11 (set in Advanced settings) | Secrets: none
 - Live URL: (none yet. Never invent one.)
