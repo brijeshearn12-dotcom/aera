@@ -19,7 +19,7 @@ Update at the end of every step. VERIFIED only with evidence.
 | S10 | Design system and shell | P0 | 25 | S2, S7 | VERIFIED | Matches tokens at 1280 and 390 px | ui/styles.css flat design tokens (WCAG AA >=4.5:1, reduced-motion, no gradients/glass); ui/components.py helpers; app.py 60/40 shell with real status line from predictions.parquet; s10_desktop_1280.png and s10_mobile_390.png captured |
 | S11 | Map, list, station panel | P0 | 35 | S9, S10 | VERIFIED | AC3, AC5, AC6 with screenshots | ui/map_view.py Folium map with Positron tiles, risk circle markers, text tooltips/popups, accent rings; ui/charts.py D5 forecast chart with past 24h actuals + single t+24h forecast point with 80% conformal band and 60/250 lines; synchronized station panel (Folium click, fallback dropdown selectbox, ranked cards, URL query params); 5 screenshots captured |
 | S12 | Patterns strip, download, badge | P0 | 20 | S11 | VERIFIED | AC4, AC7 with evidence | S12 Patterns strip with 3 detected patterns (Diurnal peak +15.1% at 08:00, Calm wind +19.7% uplift, Persistent worst stations) and collapsed diurnal heatmap (enforcing <=3 charts rule); municipal brief download button serving A4 printable brief.html; data quality telemetry standards legend; baseline comparison statement and governance footer |
-| S13 | Testing, hardening, README | P0 | 25 | S12 | NOT STARTED | Tests pass; AC1, AC2 verified; README complete | |
+| S13 | Testing, hardening, README | P0 | 25 | S12 | VERIFIED | Tests pass; AC1, AC2 verified; README complete | All 43 pytest unit/contract tests pass; python -m citypulse.pipeline rebuilds in 14.0s without keys (AC1); cold load 9.63ms / warm 3.59ms under 5s (AC2); zero secrets found across repo; comprehensive README with data terms, model comparison, limitations; responsive screenshots captured at 768px, 1280px, 390px |
 | S14 | Final deploy, verification, handover | P0 | 15 | S13 | NOT STARTED | AC9 on the real URL | |
 
 ## Subtasks
@@ -66,6 +66,10 @@ Update at the end of every step. VERIFIED only with evidence.
 | S12.1 | Implement S12 Patterns strip with 3 detected operational patterns and weak-signal handling | VERIFIED | 5 min |
 | S12.2 | Implement municipal brief download button in app.py delivering A4 printable HTML brief | VERIFIED | 4 min |
 | S12.3 | Implement data quality legend, baseline disclaimer, and governance footer in app.py | VERIFIED | 5 min |
+| S13.1 | Run full pytest suite (43 passed) and harden app.py against empty/insufficient data | VERIFIED | 5 min |
+| S13.2 | Measure cold/warm app load latencies (< 5s target, AC2 verified) and pipeline rebuild (AC1 verified) | VERIFIED | 5 min |
+| S13.3 | Perform automated secret scanning (0 credentials found) and responsive checks (768px, 1280px, 390px) | VERIFIED | 4 min |
+| S13.4 | Author comprehensive technical README with verified data sources, metrics, and honest limitations | VERIFIED | 4 min |
 
 ## Acceptance criteria
 | ID | Criterion | Status | Evidence |

@@ -304,6 +304,11 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | 2026-10-22 | S9 | Low telemetry quality surfaced as operational warning | Surfaced as explicit alert ([ALERT] Low telemetry coverage) rather than a hidden score penalty |
 | 2026-10-22 | S10 | Flat design system tokens (WCAG AA >= 4.5:1 contrast) | Strict exclusion of gradients, glass effects, or unreadable tint-on-white text combinations |
 | 2026-10-22 | S10 | 60/40 responsive shell layout with media query stacking | Stacks columns below 768px for clean mobile rendering while preserving 60/40 desktop grid |
+| 2026-10-23 | S11 | Folium CartoDB Positron map with dual click/dropdown/URL query synchronization | Circle markers with text risk labels, tooltip & popup inspection, and query param deep linking (?station=id) |
+| 2026-10-23 | S11 | D5 chart: past 24h actual observations + single forecast point with 80% conformal band | Avoids invented hourly forecast curves; horizontal reference lines at 60 and 250 µg/m³ |
+| 2026-10-23 | S12 | 3 detected patterns with weak-signal handling and collapsible diurnal heatmap | Strictly enforces <=3 charts visible on screen simultaneously |
+| 2026-10-23 | S13 | Defensive failure state handling in app.py (no stack traces) | Explicit info/warning alerts for empty predictions, missing patterns, or unselected stations |
+| 2026-10-23 | S13 | Secret scanner script and clean credential audit | Verified 0 secrets committed; .env.example contains only benign placeholders |
 
 ### Phase A — Data Access Verification Report
 
@@ -480,6 +485,11 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S11 | `python -m pytest tests/test_pipeline_smoke.py` | Pass (18 passed, including test_map_view_contract and test_charts_contract, exit 0) | 2026-10-23 00:10:24 |
 | S12 | `python -m pytest` | Pass (43 passed across all 6 test suites in 5.92s, exit 0) | 2026-10-23 00:10:40 |
 | S12 | Headless browser capture of live app (port 8501) | Pass (s11_desktop_1280.png, s11_mobile_390.png, 3 distinct station selection screenshots captured, exit 0) | 2026-10-23 00:15:34 |
+| S13 | `python -m citypulse.pipeline --cached` | Pass (full rebuild from committed sample/cached data in 14.0s without keys, exit 0, AC1 verified) | 2026-10-23 00:22:30 |
+| S13 | Cold & Warm App Load Benchmark | Pass (Cold: 9.63 ms, Warm: 3.59 ms, well below 5s target, AC2 verified) | 2026-10-23 00:23:16 |
+| S13 | `python -m pytest -v` | Pass (all 43 unit and contract tests passed in 10.15s, exit 0) | 2026-10-23 00:31:46 |
+| S13 | Secret & Credential Scan | Pass (0 suspicious secrets, 0 uncommitted .env files, clean .env.example) | 2026-10-23 00:26:58 |
+| S13 | Responsive Viewport Capture | Pass (s13_desktop_1280.png, s13_tablet_768.png, s13_mobile_390.png captured, exit 0) | 2026-10-23 00:26:16 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
@@ -494,16 +504,18 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S11: Mobile Full Dashboard | 390px | Responsive single-column stacked view; map and ranked station cards collapse smoothly without horizontal scroll | `s11_mobile_390.png`
 - S11: Station Panel Updates | 1280px | Detail panel verified across 3 distinct stations: Station 3409486 (Kherwadi), Station 3409512 (Borivali East), Station 3409483 (Deonar) | `s11_station_3409486.png`, `s11_station_3409512.png`, `s11_station_3409483.png`
 - S12: Patterns Strip & Footer | 1280px | 3 detected pattern cards (Diurnal peak, Calm wind, Worst corridors) with weak-signal guards, collapsible diurnal heatmap expander (max 3 charts rule), A4 brief download button, telemetry quality legend, baseline disclaimer, and governance advisory | `s11_desktop_1280.png`
+- S13: Responsive Tablet Layout | 768px | Column stacking transitions smoothly; interactive map, ranked cards, and station detail panel maintain clean touch targets without horizontal overflow | `s13_tablet_768.png`
+- S13: Hardened Mobile Layout | 390px | Single-column cards, buttons, and telemetry badges display without wrapping clipping | `s13_mobile_390.png`
 
 ## 12. Known bugs and blockers
-- None
+- None. All 43 pytest unit/contract tests passing. No unhandled exceptions on empty or missing data.
 
 ## 13. Deployment configuration and status
 - Repo URL: https://github.com/brijeshearn12-dotcom/citypulse.git
-- Host: Streamlit Community Cloud
+- Host: Streamlit Community Cloud (Fallback: Hugging Face Spaces)
 - Main file: app.py | Python: 3.11 (set in Advanced settings) | Secrets: none
-- Live URL: (none yet. Never invent one. Awaiting user clicks and URL.)
-- Smoke test (S2): IN PROGRESS (Local verified, awaiting cloud deployment)
+- Live URL: (none yet. Never invent one. Ready for S14.)
+- Smoke test (S2): IN PROGRESS (Local verified, ready for cloud deployment)
 - Final verification (S14): NOT STARTED
 - Evidence: (log excerpts, screenshot paths)
 
@@ -522,9 +534,10 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S10 | 25 | 20 | 185 | 175 |
 | S11 | 35 | 22 | 207 | 153 |
 | S12 | 20 | 15 | 222 | 138 |
+| S13 | 25 | 18 | 240 | 120 |
 
 ## 15. Exact next action
-HARD STOP: S11 (Interactive Map, Ranked List & Station Panel) and S12 (Patterns Strip, Municipal Brief Download & Quality/Governance Footer) are fully completed, tested (43/43 tests passing), and verified with screenshots. Awaiting user review and explicit approval before starting Step 13 (Testing, hardening, README).
+HARD STOP: Step 13 (Testing, Hardening & README) is fully complete. All 43 tests pass, AC1 and AC2 are verified, README is comprehensive, secrets scan confirmed clean, and responsive screenshots are captured. Awaiting user review and explicit approval before starting Step 14 (Final deploy, verification, handover).
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

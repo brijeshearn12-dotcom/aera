@@ -230,27 +230,30 @@ with col_map:
                         st.rerun()
 
     # Fallback / Direct Station Selectbox
-    station_options = {}
-    for _, srow in stations_full.iterrows():
-        s_id = int(srow["station_id"])
-        s_display = f"{srow['station_name'].split(',')[0]} ({srow['predicted_class']}: {srow['predicted_pm25']} µg/m³)"
-        station_options[s_id] = s_display
+    if not stations_full.empty:
+        station_options = {}
+        for _, srow in stations_full.iterrows():
+            s_id = int(srow["station_id"])
+            s_display = f"{srow['station_name'].split(',')[0]} ({srow['predicted_class']}: {srow['predicted_pm25']} µg/m³)"
+            station_options[s_id] = s_display
 
-    station_ids_list = list(station_options.keys())
-    curr_id = int(st.session_state["selected_station_id"])
-    default_idx = station_ids_list.index(curr_id) if curr_id in station_ids_list else 0
+        station_ids_list = list(station_options.keys())
+        curr_id = int(st.session_state.get("selected_station_id", 0))
+        default_idx = station_ids_list.index(curr_id) if curr_id in station_ids_list else 0
 
-    selected_from_dropdown = st.selectbox(
-        "Select station to inspect:",
-        options=station_ids_list,
-        index=default_idx,
-        format_func=lambda x: station_options.get(x, str(x)),
-        key="station_dropdown_selector",
-    )
+        selected_from_dropdown = st.selectbox(
+            "Select station to inspect:",
+            options=station_ids_list,
+            index=default_idx,
+            format_func=lambda x: station_options.get(x, str(x)),
+            key="station_dropdown_selector",
+        )
 
-    if selected_from_dropdown != st.session_state["selected_station_id"]:
-        st.session_state["selected_station_id"] = selected_from_dropdown
-        st.rerun()
+        if selected_from_dropdown != st.session_state["selected_station_id"]:
+            st.session_state["selected_station_id"] = selected_from_dropdown
+            st.rerun()
+    else:
+        st.info("No monitoring station predictions available to select.")
 
     st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
 
@@ -416,69 +419,79 @@ st.markdown("<hr style='border: 0; border-top: 1px solid #D2D2D7; margin: 28px 0
 st.markdown("### Recurring Operational Patterns (90-Day Baseline)")
 st.caption("Derived from verified winter observations across Mumbai monitoring corridors.")
 
-p_cols = st.columns(3)
 patterns_dict = patterns_data.get("patterns", {})
 
-p1 = patterns_dict.get("evening_peak", {})
-p2 = patterns_dict.get("calm_wind_episodes", {})
-p3 = patterns_dict.get("persistent_worst_stations", {})
+if not patterns_dict:
+    st.info("ℹ️ Historical operational patterns have not been computed yet. Run the pattern discovery pipeline to populate recurring insights.")
+else:
+    p_cols = st.columns(3)
+    p1 = patterns_dict.get("evening_peak", {})
+    p2 = patterns_dict.get("calm_wind_episodes", {})
+    p3 = patterns_dict.get("persistent_worst_stations", {})
 
-with p_cols[0]:
-    weak_badge = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p1.get("weak") else ""
-    st.markdown(
-        f"""
-        <div class="cp-card">
-          <div class="cp-card-title">1. Diurnal Peak Cycle{weak_badge}</div>
-          <div class="cp-card-body">
-            <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p1.get("sentence", "Diurnal peak identified.")}</p>
-            <div style="font-size: 11px; color: #6E6E73;">
-              <strong>Peak Hour:</strong> {p1.get("peak_hour", 8):02d}:00 IST &nbsp;|&nbsp;
-              <strong>Uplift:</strong> +{p1.get("percentage_difference", 15.1)}% vs median<br>
-              <strong>Window:</strong> 90 Days ({p1.get("sample_size", 14730):,} obs)
+    with p_cols[0]:
+        weak_badge = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p1.get("weak") else ""
+        pk_hr = int(p1.get("peak_hour") or 8)
+        diff1 = float(p1.get("percentage_difference") if p1.get("percentage_difference") is not None else 15.1)
+        s_size1 = int(p1.get("sample_size") or 14730)
+        st.markdown(
+            f"""
+            <div class="cp-card">
+              <div class="cp-card-title">1. Diurnal Peak Cycle{weak_badge}</div>
+              <div class="cp-card-body">
+                <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p1.get("sentence", "Diurnal peak identified.")}</p>
+                <div style="font-size: 11px; color: #6E6E73;">
+                  <strong>Peak Hour:</strong> {pk_hr:02d}:00 IST &nbsp;|&nbsp;
+                  <strong>Uplift:</strong> +{diff1:.1f}% vs median<br>
+                  <strong>Window:</strong> 90 Days ({s_size1:,} obs)
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
-with p_cols[1]:
-    weak_badge2 = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p2.get("weak") else ""
-    st.markdown(
-        f"""
-        <div class="cp-card">
-          <div class="cp-card-title">2. Calm-Wind Stagnation{weak_badge2}</div>
-          <div class="cp-card-body">
-            <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p2.get("sentence", "Calm wind stagnation identified.")}</p>
-            <div style="font-size: 11px; color: #6E6E73;">
-              <strong>Calm Threshold:</strong> &le;{p2.get("q1_wind_speed", 4.8)} km/h &nbsp;|&nbsp;
-              <strong>Uplift:</strong> +{p2.get("percentage_difference", 19.7)}%<br>
-              <strong>Window:</strong> 90 Days ({p2.get("episode_hours", 433)} stagnation hrs)
+    with p_cols[1]:
+        weak_badge2 = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p2.get("weak") else ""
+        q1_spd = float(p2.get("q1_wind_speed") if p2.get("q1_wind_speed") is not None else 4.8)
+        diff2 = float(p2.get("percentage_difference") if p2.get("percentage_difference") is not None else 19.7)
+        ep_hrs = int(p2.get("episode_hours") or 433)
+        st.markdown(
+            f"""
+            <div class="cp-card">
+              <div class="cp-card-title">2. Calm-Wind Stagnation{weak_badge2}</div>
+              <div class="cp-card-body">
+                <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p2.get("sentence", "Calm wind stagnation identified.")}</p>
+                <div style="font-size: 11px; color: #6E6E73;">
+                  <strong>Calm Threshold:</strong> &le;{q1_spd:.1f} km/h &nbsp;|&nbsp;
+                  <strong>Uplift:</strong> +{diff2:.1f}%<br>
+                  <strong>Window:</strong> 90 Days ({ep_hrs} stagnation hrs)
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
-with p_cols[2]:
-    weak_badge3 = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p3.get("weak") else ""
-    st.markdown(
-        f"""
-        <div class="cp-card">
-          <div class="cp-card-title">3. Persistent Corridors{weak_badge3}</div>
-          <div class="cp-card-body">
-            <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p3.get("sentence", "Persistent hot spots identified.")}</p>
-            <div style="font-size: 11px; color: #6E6E73;">
-              <strong>Threshold:</strong> >60.0 µg/m³ &nbsp;|&nbsp;
-              <strong>Top:</strong> Kherwadi (46.7%), Byculla (43.3%)<br>
-              <strong>Window:</strong> 90 Days ({p3.get("sample_size", 14730):,} obs)
+    with p_cols[2]:
+        weak_badge3 = " • <span style='color: #8A4B00; font-weight: 600;'>Weak signal</span>" if p3.get("weak") else ""
+        s_size3 = int(p3.get("sample_size") or 14730)
+        st.markdown(
+            f"""
+            <div class="cp-card">
+              <div class="cp-card-title">3. Persistent Corridors{weak_badge3}</div>
+              <div class="cp-card-body">
+                <p style="margin-bottom: 8px; font-size: 13px; color: #1D1D1F;">{p3.get("sentence", "Persistent hot spots identified.")}</p>
+                <div style="font-size: 11px; color: #6E6E73;">
+                  <strong>Threshold:</strong> >60.0 µg/m³ &nbsp;|&nbsp;
+                  <strong>Top:</strong> Kherwadi (46.7%), Byculla (43.3%)<br>
+                  <strong>Window:</strong> 90 Days ({s_size3:,} obs)
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+            """,
+            unsafe_allow_html=True,
+        )
 
 # Collapsible expander for Diurnal Heatmap (keeps screen under 3 charts at once)
 with st.expander("📊 View Diurnal Station-by-Hour PM2.5 Profile Heatmap", expanded=False):
