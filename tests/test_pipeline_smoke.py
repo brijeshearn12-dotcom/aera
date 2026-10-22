@@ -2,10 +2,12 @@
 
 import json
 from pathlib import Path
+import joblib
+import numpy as np
 import pandas as pd
 import pytest
 
-from config import PROCESSED_DATA_DIR, SAMPLE_DATA_DIR, OUTPUTS_DIR
+from config import PROCESSED_DATA_DIR, SAMPLE_DATA_DIR, OUTPUTS_DIR, MODELS_DIR
 
 
 def test_processed_pm25_contract():
@@ -203,3 +205,129 @@ def test_patterns_and_heatmap_contract():
 
     # 9 stations * 24 hours = 216 rows
     assert len(df_heatmap) == 216, f"Expected 216 heatmap rows, got {len(df_heatmap)}"
+
+
+def test_features_parquet_contract():
+    """Verify features.parquet meets S6 schema and causal feature requirements."""
+    feat_file = PROCESSED_DATA_DIR / "features.parquet"
+    assert feat_file.exists(), "features.parquet does not exist."
+
+    df = pd.read_parquet(feat_file)
+    expected_cols = [
+        "pm25",
+        "pm25_lag_1",
+        "pm25_lag_3",
+        "pm25_lag_6",
+        "pm25_lag_12",
+        "pm25_lag_24",
+        "pm25_roll_mean_6h",
+        "pm25_roll_max_6h",
+        "pm25_roll_mean_24h",
+        "pm25_roll_max_24h",
+        "hour",
+        "weekday",
+        "month",
+        "wind_speed",
+        "sin_wind_dir",
+        "cos_wind_dir",
+        "temperature",
+        "relative_humidity",
+        "rainfall_sum_24h",
+        "boundary_layer_height",
+        "forecast_wind_speed_mean_24h",
+        "forecast_rainfall_sum_24h",
+        "target_pm25",
+        "target_class",
+    ]
+    for col in expected_cols:
+        assert col in df.columns, f"Missing feature column: {col}"
+
+    # Station count: 9 stations
+    assert df["station_id"].nunique() == 9, f"Expected 9 stations, got {df['station_id'].nunique()}"
+
+
+def test_baseline_metrics_contract():
+    """Verify baseline_metrics.json exists and contains Persistence and 24h Moving Avg."""
+    baseline_file = OUTPUTS_DIR / "baseline_metrics.json"
+    assert baseline_file.exists(), "baseline_metrics.json does not exist."
+
+    data = json.loads(baseline_file.read_text(encoding="utf-8"))
+    assert "persistence" in data, "persistence key missing in baseline_metrics.json"
+    assert "moving_average_24h" in data, "moving_average_24h key missing in baseline_metrics.json"
+    assert "test_period" in data, "test_period missing in baseline_metrics.json"
+
+    p = data["persistence"]
+    ma = data["moving_average_24h"]
+    assert "mae" in p and "f1_unhealthy_or_worse" in p
+    assert "mae" in ma and "f1_unhealthy_or_worse" in ma
+    assert p["mae"] > 0 and ma["mae"] > 0
+
+
+def test_model_artifacts_and_metrics_contract():
+    """Verify trained models and model_metrics.json meet S7 contract."""
+    reg_file = MODELS_DIR / "reg.joblib"
+    clf_file = MODELS_DIR / "clf.joblib"
+    metrics_file = OUTPUTS_DIR / "model_metrics.json"
+
+    assert reg_file.exists(), "reg.joblib does not exist."
+    assert clf_file.exists(), "clf.joblib does not exist."
+    assert metrics_file.exists(), "model_metrics.json does not exist."
+
+    # Verify models can be unpickled
+    reg = joblib.load(reg_file)
+    clf = joblib.load(clf_file)
+    assert hasattr(reg, "predict")
+    assert hasattr(clf, "predict_proba")
+
+    data = json.loads(metrics_file.read_text(encoding="utf-8"))
+    assert "lightgbm_regressor" in data
+    assert "lightgbm_classifier" in data
+    assert "baselines" in data
+    assert "comparison_summary" in data
+
+    summary = data["comparison_summary"]
+    assert "production_decision" in summary
+    assert "decision_rationale" in summary
+
+
+def test_predictions_parquet_contract():
+    """Verify predictions.parquet contains required columns, valid probabilities, and all stations."""
+    pred_file = OUTPUTS_DIR / "predictions.parquet"
+    assert pred_file.exists(), "predictions.parquet does not exist."
+
+    df = pd.read_parquet(pred_file)
+    assert len(df) == 9, f"Expected 9 stations, got {len(df)}"
+
+    required_cols = [
+        "station_id",
+        "predicted_class",
+        "p_good",
+        "p_unhealthy",
+        "p_severe",
+        "predicted_pm25",
+        "as_of",
+    ]
+    for col in required_cols:
+        assert col in df.columns, f"Missing required predictions column: {col}"
+
+    # Verify probabilities are valid and sum to 1.0
+    prob_sums = df["p_good"] + df["p_unhealthy"] + df["p_severe"]
+    for idx, s in enumerate(prob_sums):
+        assert np.isclose(s, 1.0, atol=1e-3), f"Row {idx} probabilities sum to {s}, expected 1.0"
+
+    # All probabilities in [0, 1]
+    assert (df["p_good"] >= 0).all() and (df["p_good"] <= 1).all()
+    assert (df["p_unhealthy"] >= 0).all() and (df["p_unhealthy"] <= 1).all()
+    assert (df["p_severe"] >= 0).all() and (df["p_severe"] <= 1).all()
+
+    # Predicted classes valid
+    valid_classes = {"Good", "Unhealthy", "Severe"}
+    assert set(df["predicted_class"].unique()).issubset(valid_classes)
+
+
+def test_eval_comparison_chart_output():
+    """Verify interactive evaluation comparison chart HTML was created."""
+    chart_file = OUTPUTS_DIR / "s7_eval_comparison.html"
+    assert chart_file.exists(), "s7_eval_comparison.html does not exist."
+    assert chart_file.stat().st_size > 10000, "s7_eval_comparison.html is suspiciously small or empty."
+

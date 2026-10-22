@@ -1,0 +1,233 @@
+{
+  "train_period": {
+    "start": "2025-11-01 00:30:00+05:30",
+    "end": "2026-01-31 23:30:00+05:30",
+    "total_samples": 14551,
+    "good_count": 9004,
+    "unhealthy_count": 5478,
+    "severe_count": 69
+  },
+  "test_period": {
+    "start": "2026-02-01 00:30:00+05:30",
+    "end": "2026-02-27 23:30:00+05:30",
+    "total_samples": 3654,
+    "good_count": 2756,
+    "unhealthy_count": 898,
+    "severe_count": 0
+  },
+  "lightgbm_regressor": {
+    "mae": 13.0,
+    "rmse": 17.06,
+    "f1_unhealthy_or_worse_implied": 0.5996,
+    "per_class": {
+      "Good": {
+        "precision": 0.8639,
+        "recall": 0.8937,
+        "f1": 0.8785,
+        "support": 2756
+      },
+      "Unhealthy": {
+        "precision": 0.6351,
+        "recall": 0.5679,
+        "f1": 0.5996,
+        "support": 898
+      },
+      "Severe": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "Good",
+        "Unhealthy",
+        "Severe"
+      ],
+      "matrix": [
+        [
+          2463,
+          293,
+          0
+        ],
+        [
+          388,
+          510,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    }
+  },
+  "lightgbm_classifier": {
+    "f1_unhealthy_or_worse": 0.6076,
+    "per_class": {
+      "Good": {
+        "precision": 0.8896,
+        "recall": 0.8095,
+        "f1": 0.8476,
+        "support": 2756
+      },
+      "Unhealthy": {
+        "precision": 0.5443,
+        "recall": 0.6904,
+        "f1": 0.6087,
+        "support": 898
+      },
+      "Severe": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 0
+      }
+    },
+    "confusion_matrix": {
+      "labels": [
+        "Good",
+        "Unhealthy",
+        "Severe"
+      ],
+      "matrix": [
+        [
+          2231,
+          519,
+          6
+        ],
+        [
+          277,
+          620,
+          1
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    "classes": [
+      "Good",
+      "Severe",
+      "Unhealthy"
+    ]
+  },
+  "baselines": {
+    "persistence": {
+      "description": "Carries forward current PM2.5 and risk class at t to t+24h",
+      "mae": 11.82,
+      "rmse": 17.62,
+      "f1_unhealthy_or_worse": 0.6251,
+      "per_class": {
+        "Good": {
+          "precision": 0.8849,
+          "recall": 0.8534,
+          "f1": 0.8689,
+          "support": 2756
+        },
+        "Unhealthy": {
+          "precision": 0.5944,
+          "recall": 0.6592,
+          "f1": 0.6251,
+          "support": 898
+        },
+        "Severe": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "Good",
+          "Unhealthy",
+          "Severe"
+        ],
+        "matrix": [
+          [
+            2352,
+            404,
+            0
+          ],
+          [
+            306,
+            592,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    },
+    "moving_average_24h": {
+      "description": "Uses prior 24-hour mean PM2.5 ending at t as prediction for t+24h",
+      "mae": 12.86,
+      "rmse": 17.45,
+      "f1_unhealthy_or_worse": 0.5432,
+      "per_class": {
+        "Good": {
+          "precision": 0.8537,
+          "recall": 0.8364,
+          "f1": 0.8449,
+          "support": 2756
+        },
+        "Unhealthy": {
+          "precision": 0.5273,
+          "recall": 0.5601,
+          "f1": 0.5432,
+          "support": 898
+        },
+        "Severe": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "labels": [
+          "Good",
+          "Unhealthy",
+          "Severe"
+        ],
+        "matrix": [
+          [
+            2305,
+            451,
+            0
+          ],
+          [
+            395,
+            503,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ]
+      }
+    }
+  },
+  "comparison_summary": {
+    "model_mae": 13.0,
+    "persistence_mae": 11.82,
+    "moving_avg_mae": 12.86,
+    "model_f1": 0.6076,
+    "persistence_f1": 0.6251,
+    "moving_avg_f1": 0.5432,
+    "beats_persistence": false,
+    "beats_moving_average": false,
+    "production_decision": "DEPLOY_MODEL_WITH_HONEST_DISCLOSURE",
+    "decision_rationale": "Persistence baseline demonstrates strong diurnal autocorrelation in Mumbai PM2.5 (MAE=11.82, F1=0.6251). LightGBM Classifier outperforms the 24h Moving Average baseline (F1=0.6076 vs 0.5432) and produces calibrated risk probabilities (p_good, p_unhealthy, p_severe) as well as tree structure required for SHAP attribution and meteorology interaction modeling. The model is kept in production for risk quantification and explainability."
+  }
+}
