@@ -186,7 +186,7 @@ def render_diurnal_heatmap(heatmap_df: pd.DataFrame) -> go.Figure:
             x=[f"{h:02d}:00" for h in pivot.columns],
             y=clean_names,
             colorscale="Blues",
-            colorbar=dict(title="PM2.5 (µg/m³)", titleside="right", len=0.8),
+            colorbar=dict(title=dict(text="PM2.5 (µg/m³)", side="right"), len=0.8),
             hovertemplate="<b>%{y}</b><br>Time: %{x} IST<br>Median: %{z:.1f} µg/m³<extra></extra>",
         )
     )

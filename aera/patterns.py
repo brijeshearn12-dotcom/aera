@@ -312,7 +312,7 @@ def render_heatmap_chart(heatmap_df: pd.DataFrame, output_path: Path) -> Path:
             x=[f"{h:02d}:00" for h in pivot.columns],
             y=pivot.index.tolist(),
             colorscale="Blues",  # Single-hue sequential colour scale
-            colorbar=dict(title="Median PM2.5 (µg/m³)", titleside="right"),
+            colorbar=dict(title=dict(text="Median PM2.5 (µg/m³)", side="right")),
             hovertemplate="Station: %{y}<br>Hour: %{x}<br>Median PM2.5: %{z:.1f} µg/m³<extra></extra>",
         )
     )
