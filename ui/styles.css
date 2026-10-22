@@ -1,5 +1,271 @@
-html,
-body,
-[class*="css"] {
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', Inter, system-ui, sans-serif;
+/* ==========================================================================
+   CityPulse Design System Tokens & Global Stylesheet
+   Specification: Clean Apple/Linear inspired design system.
+   Strict rules: Solid flat colors only. NO gradients, NO glass effects.
+   ========================================================================== */
+
+:root {
+  /* Colors */
+  --bg: #FFFFFF;
+  --surface: #F5F5F7;
+  --text: #1D1D1F;
+  --secondary: #6E6E73;
+  --hairline: #D2D2D7;
+  --accent: #0071E3;
+  --accent-hover: #005BB5;
+  --accent-active: #00478F;
+
+  /* Risk Semantics (WCAG AA Contrast >= 4.5:1 compliant) */
+  --risk-good-bg: #E8F8ED;
+  --risk-good-text: #135E26;
+  --risk-good-border: #A3E5B5;
+
+  --risk-unhealthy-bg: #FFF4E5;
+  --risk-unhealthy-text: #8A4B00;
+  --risk-unhealthy-border: #FCD399;
+
+  --risk-severe-bg: #FFEBEA;
+  --risk-severe-text: #9C1C14;
+  --risk-severe-border: #FCA5A0;
+
+  /* Typography Stack */
+  --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+
+  /* Type Scale */
+  --type-display: 34px;
+  --type-title: 22px;
+  --type-headline: 17px;
+  --type-body: 15px;
+  --type-caption: 13px;
+
+  /* Spacing Scale */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+
+  /* Geometry & Elevation */
+  --radius-card: 12px;
+  --radius-pill: 999px;
+  --radius-btn: 8px;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Interaction & Focus */
+  --focus-ring: 2px solid #0071E3;
+  --transition-default: 180ms ease-out;
+}
+
+/* Global Font & Baseline Reset */
+html, body, [class*="css"], [class*="st-"] {
+  font-family: var(--font-stack) !important;
+  color: var(--text);
+  background-color: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hide Default Streamlit Chrome carefully */
+#MainMenu { visibility: hidden; }
+header[data-testid="stHeader"] { display: none !important; }
+footer { visibility: hidden !important; }
+.stDeployButton { display: none !important; }
+
+/* Focus Ring for Keyboard Navigation Accessibility */
+a:focus-visible, button:focus-visible, [tabindex]:focus-visible {
+  outline: var(--focus-ring) !important;
+  outline-offset: 2px !important;
+}
+
+/* Reduced Motion Preference */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Top App Bar Header */
+.cp-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: 24px;
+}
+.cp-brand-group {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+.cp-logo {
+  font-size: var(--type-title);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+.cp-city-tag {
+  font-size: var(--type-headline);
+  font-weight: 500;
+  color: var(--secondary);
+}
+.cp-status-line {
+  font-size: var(--type-caption);
+  color: var(--secondary);
+  background-color: var(--surface);
+  border: 1px solid var(--hairline);
+  padding: 6px 14px;
+  border-radius: var(--radius-pill);
+}
+
+/* Risk Pill Component */
+.cp-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 12px;
+  border-radius: var(--radius-pill);
+  font-size: var(--type-caption);
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+.cp-pill-good {
+  background-color: var(--risk-good-bg);
+  color: var(--risk-good-text);
+  border: 1px solid var(--risk-good-border);
+}
+.cp-pill-unhealthy {
+  background-color: var(--risk-unhealthy-bg);
+  color: var(--risk-unhealthy-text);
+  border: 1px solid var(--risk-unhealthy-border);
+}
+.cp-pill-severe {
+  background-color: var(--risk-severe-bg);
+  color: var(--risk-severe-text);
+  border: 1px solid var(--risk-severe-border);
+}
+
+/* Quality Badge Component */
+.cp-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.cp-badge-good {
+  background-color: var(--risk-good-bg);
+  color: var(--risk-good-text);
+}
+.cp-badge-fair {
+  background-color: var(--surface);
+  color: var(--secondary);
+  border: 1px solid var(--hairline);
+}
+.cp-badge-low {
+  background-color: #FFF0F0;
+  color: #D70015;
+  border: 1px solid #FFCCD0;
+}
+
+/* Card Component (Flat surface, hairline border, subtle shadow) */
+.cp-card {
+  background-color: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-card);
+  margin-bottom: 16px;
+  transition: border-color var(--transition-default);
+}
+.cp-card:hover {
+  border-color: #BCBCC0;
+}
+.cp-card-title {
+  font-size: var(--type-headline);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.cp-card-body {
+  font-size: var(--type-body);
+  color: var(--secondary);
+  line-height: 1.45;
+}
+
+/* Big Number Metric Card */
+.cp-bignum-card {
+  background-color: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  text-align: left;
+}
+.cp-bignum-val {
+  font-size: var(--type-display);
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+.cp-bignum-caption {
+  font-size: var(--type-caption);
+  color: var(--secondary);
+  margin-top: 4px;
+}
+
+/* Bottom Strip Shell Placeholder */
+.cp-bottom-strip {
+  border-top: 1px solid var(--hairline);
+  padding: 20px 0;
+  margin-top: 32px;
+  color: var(--secondary);
+  font-size: var(--type-caption);
+}
+
+/* Standard Button States */
+button.cp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--accent);
+  color: #FFFFFF;
+  border: none;
+  border-radius: var(--radius-btn);
+  padding: 8px 16px;
+  font-size: var(--type-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color var(--transition-default);
+}
+button.cp-btn:hover {
+  background-color: var(--accent-hover);
+}
+button.cp-btn:active {
+  background-color: var(--accent-active);
+}
+button.cp-btn:disabled {
+  background-color: #E5E5EA;
+  color: #8E8E93;
+  cursor: not-allowed;
+}
+
+/* Responsive Stacking below 768px */
+@media (max-width: 768px) {
+  .cp-topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 12px 0;
+  }
+  .cp-status-line {
+    font-size: 11px;
+    width: 100%;
+    text-align: center;
+  }
 }

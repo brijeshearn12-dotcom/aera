@@ -215,8 +215,53 @@ citypulse/
     * Probability sum: strictly 1.0 across all stations
   - File: `data/outputs/s7_eval_comparison.html`
     * Plotly interactive time-series comparison chart of Actuals vs LightGBM vs Persistence on test set
-- explanations.parquet: station_id, driver_1..3 (text, direction), lower, upper, quality_label, notes (S8)
-- ranked list structure (S9)
+- explanations.parquet (S8):
+  - File: `data/outputs/explanations.parquet`
+  - Columns:
+    * `station_id`: int64 — Station identifier
+    * `station_name`: object / string — Station name
+    * `predicted_class`: object / string — Predicted risk class ('Good', 'Unhealthy', 'Severe')
+    * `predicted_pm25`: float64 — Point forecast for t+24h in µg/m³
+    * `driver_1_text`: object / string — Plain-language phrase for top SHAP feature
+    * `driver_1_dir`: object / string — Direction ('raises risk' or 'lowers risk')
+    * `driver_2_text`: object / string — Plain-language phrase for second feature
+    * `driver_2_dir`: object / string — Direction
+    * `driver_3_text`: object / string — Plain-language phrase for third feature
+    * `driver_3_dir`: object / string — Direction
+    * `lower`: float64 — Conformal-calibrated 10th percentile bound in µg/m³ (clamped >= 0 and <= point forecast)
+    * `upper`: float64 — Conformal-calibrated 90th percentile bound in µg/m³ (clamped >= point forecast)
+    * `quality_label`: object / string — Telemetry quality tier ('Good', 'Fair', 'Low')
+    * `notes`: object / string — Plain-language explanation of interval calibration and containment clamping
+  - Coverage: 80.16% empirical test coverage achieved on untouched February 2026 test block (via conformal delta = 4.67 µg/m³).
+- ranked_stations.parquet (S9):
+  - File: `data/outputs/ranked_stations.parquet`
+  - Columns:
+    * `rank`: int64 — Priority rank (1 to 5)
+    * `station_id`: int64 — Monitoring station identifier
+    * `station_name`: object / string — Station name
+    * `predicted_class`: object / string — Forecast risk tier
+    * `predicted_pm25`: float64 — Forecast PM2.5 in µg/m³
+    * `p_unhealthy`: float64 — Probability of Unhealthy risk
+    * `p_severe`: float64 — Probability of Severe risk
+    * `severity_weight`: float64 — Explicit priority multiplier (Severe=2.0, Unhealthy=1.5, Good=1.0 + 0.5*p_unh + 1.0*p_sev)
+    * `risk_score`: float64 — Priority score: (p_unhealthy + p_severe) * severity_weight
+    * `time_window`: object / string — Targeted intervention window ("Next 24 hours (diurnal peak 08:00 IST)")
+    * `action`: object / string — Deterministic rule-based municipal intervention action
+    * `warning`: object / string — Explicit telemetry alert (e.g. "[ALERT] Low historical telemetry coverage (<70%)")
+    * `quality_label`: object / string — 'Good', 'Fair', or 'Low'
+    * `lower`: float64 — Lower 80% interval bound
+    * `upper`: float64 — Upper 80% interval bound
+    * `primary_driver`: object / string — Plain-language top feature driver with direction
+- brief.html / brief.png (S9):
+  - File: `data/outputs/brief.html` and `data/outputs/brief.png`
+  - Format: Single-page A4 printable municipal decision brief (white background, print-specific CSS, 10mm margins).
+  - Sections:
+    1. Operational Header (Forecast Date, Horizon, Decision Cycle).
+    2. Summary Statistics (Total stations, At-risk count, Citywide median forecast, Conformal coverage).
+    3. Top-5 Prioritized Station Interventions Table.
+    4. Recurring Operational Pollution Patterns (Diurnal peak, Calm-wind stagnation, Persistent corridors).
+    5. Predictive Model vs. Baseline Evaluation Table (LightGBM, Persistence, 24h Moving Avg).
+    6. Governance, Provenance & Known Limitations Box.
 
 ## 6. Environment variables (no secrets exist in this project)
 | Name | Example | Purpose |
@@ -253,6 +298,12 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | 2026-10-22 | S6 | Historical weather as next-24-hour forecast stand-in | Acknowledged limitation; proxies NWP operational inputs for wind speed and rainfall |
 | 2026-10-22 | S7 | Model kept in production with honest disclosure | Persistence achieves lower MAE (11.82 vs 13.00) due to diurnal autocorrelation; LightGBM beats 24h Moving Avg on F1 (0.6076 vs 0.5432) and is necessary for probabilistic risk tiers and SHAP |
 | 2026-10-22 | S7 | Probability normalization constraint enforced | Guarantees p_good + p_unhealthy + p_severe == 1.0 strictly for downstream UI stability |
+| 2026-10-22 | S8 | Conformal widening on validation block (delta = 4.67 µg/m³) | Raw quantile regressor coverage was 70.83%; conformal widening achieved 80.16% test coverage |
+| 2026-10-22 | S8 | Point forecast interval containment clamping | Guarantees lower <= point_forecast <= upper and lower >= 0 physically; flagged in notes |
+| 2026-10-22 | S9 | Explicit severity weight formula for station ranking | Severity weight scales priority without secretly altering scores based on data quality |
+| 2026-10-22 | S9 | Low telemetry quality surfaced as operational warning | Surfaced as explicit alert ([ALERT] Low telemetry coverage) rather than a hidden score penalty |
+| 2026-10-22 | S10 | Flat design system tokens (WCAG AA >= 4.5:1 contrast) | Strict exclusion of gradients, glass effects, or unreadable tint-on-white text combinations |
+| 2026-10-22 | S10 | 60/40 responsive shell layout with media query stacking | Stacks columns below 768px for clean mobile rendering while preserving 60/40 desktop grid |
 
 ### Phase A — Data Access Verification Report
 
@@ -344,6 +395,25 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S7 | `citypulse/data/outputs/s7_eval_comparison.html` | created | Plotly interactive time-series evaluation chart for test block
 - S7 | `citypulse/brain.md` | modified | Updated S6/S7 contracts, metrics, decisions, and test logs
 - S7 | `citypulse/TASKS.md` | modified | Marked S6 and S7 VERIFIED with evidence
+- S8 | `citypulse/citypulse/explain.py` | created | SHAP TreeExplainer driver extraction and conformal prediction interval module
+- S8 | `citypulse/tests/test_explain.py` | created | Unit test suite for driver counts, raw-name exclusion, bounds containment, and coverage
+- S8 | `citypulse/data/outputs/explanations.parquet` | created | 9-station SHAP explanations, plain-language drivers, and calibrated intervals (80.16% coverage)
+- S8 | `citypulse/data/outputs/s8_shap_drivers.html` | created | Interactive Plotly horizontal bar chart of top environmental drivers
+- S8 | `citypulse/data/outputs/s8_prediction_intervals.html` | created | Interactive Plotly error-bar chart of point forecasts with 80% conformal bounds
+- S9 | `citypulse/citypulse/recommend.py` | created | Municipal recommendation and intervention ranking engine with explicit severity weights
+- S9 | `citypulse/citypulse/brief.py` | created | Municipal decision brief generator and headless screenshot capture
+- S9 | `citypulse/templates/brief.html.j2` | created | Jinja2 A4-printable briefing template with white-background print CSS
+- S9 | `citypulse/tests/test_recommend.py` | created | Unit test suite for deterministic rules, ranking order, quality warnings, and brief rendering
+- S9 | `citypulse/data/outputs/ranked_stations.parquet` | created | Top-5 ranked municipal intervention actions with scores and time windows
+- S9 | `citypulse/data/outputs/brief.html` | created | Rendered one-page A4 municipal decision brief
+- S9 | `citypulse/data/outputs/brief.png` | created | High-resolution headless browser screenshot of the printable brief
+- S10 | `citypulse/ui/styles.css` | modified | Flat design system tokens (Apple/Linear inspired, WCAG AA >=4.5:1, reduced-motion, no gradients)
+- S10 | `citypulse/ui/components.py` | created | Reusable UI components: risk_pill, quality_badge, card, big_number
+- S10 | `citypulse/app.py` | modified | Responsive dashboard shell with top bar, real status line, 60/40 two-column layout, and bottom strip
+- S10 | `citypulse/data/outputs/s10_desktop_1280.png` | created | Verified 1280px desktop viewport screenshot
+- S10 | `citypulse/data/outputs/s10_mobile_390.png` | created | Verified 390px mobile viewport screenshot
+- S10 | `citypulse/brain.md` | modified | Updated S8-S10 schemas, contracts, decisions, screenshots, and test logs
+- S10 | `citypulse/TASKS.md` | modified | Marked S8, S9, S10 VERIFIED with real evidence
 
 ## 9. Commands executed (step, command, result summary)
 - S1 | `py -3.11 -m venv .venv` | Created Python 3.11 virtual environment in `citypulse/.venv`
@@ -374,6 +444,12 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 - S7 | `python -m citypulse.pipeline --cached` | Executed complete end-to-end pipeline in cached offline mode in 4.9s (exit 0)
 - S7 | `python -m pytest -v` | Ran complete test suite: all 28 unit and contract tests passed in 3.85s (exit 0)
 - S7 | `Start-Process data\outputs\s7_eval_comparison.html` | Opened interactive evaluation comparison chart in system browser (exit 0)
+- S8 | `python -m citypulse.explain` | Computed SHAP feature drivers, trained quantile regressors, applied conformal widening (80.16% coverage) (exit 0)
+- S9 | `python -m citypulse.recommend` | Executed municipal ranking with explicit weights, generated top-5 actions with telemetry alerts (exit 0)
+- S9 | `python -m citypulse.brief` | Generated brief.html and captured high-resolution brief.png screenshot (exit 0)
+- S10 | `python -m citypulse.pipeline --cached` | Executed end-to-end pipeline through S10 in 13.2s (exit 0)
+- S10 | `python -m pytest -v` | Ran complete test suite: all 41 unit and contract tests passed in 4.63s (exit 0)
+- S10 | Headless Edge screenshot capture | Captured verified desktop (1280x800) and mobile (390x844) viewport screenshots (exit 0)
 
 ## 10. Test results (real output only)
 | Step | Command | Result (passed/failed counts) | Date/time |
@@ -397,11 +473,20 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S6 | `python -m pytest tests/test_features.py` | Pass (5 passed: leakage prevention, forecast stand-ins, chronological split, target thresholds, exit 0) | 2026-10-22 23:00:16 |
 | S7 | `python -m pytest -v` | Pass (28 passed: 5 clean, 5 features, 6 patterns, 12 smoke contract tests, exit 0) | 2026-10-22 23:00:16 |
 | S7 | `python -m citypulse.pipeline --cached` | Pass (rebuilt clean, patterns, features, models, predictions in 4.9s without keys, exit 0) | 2026-10-22 22:58:33 |
+| S8 | `python -m pytest tests/test_explain.py` | Pass (4 passed: driver count, raw-name exclusion, interval containment, station coverage, exit 0) | 2026-10-22 23:32:00 |
+| S9 | `python -m pytest tests/test_recommend.py` | Pass (5 passed: deterministic rules, severity weights, top-5 truncation, low quality warning, brief contract, exit 0) | 2026-10-22 23:32:00 |
+| S10 | `python -m pytest -v` | Pass (41 passed: 5 clean, 4 explain, 5 features, 6 patterns, 16 smoke contract tests, 5 recommend, exit 0) | 2026-10-22 23:46:46 |
+| S10 | `python -m citypulse.pipeline --cached` | Pass (rebuilt full pipeline end-to-end through S10 in 13.2s without keys, exit 0) | 2026-10-22 23:45:16 |
 
 ## 11. Screens and flows verified (step, screen, width, finding, evidence path)
 - S1: none (foundation step, no screens)
 - S2: Desktop Home | 1280px | Title, subtitle, v0.1.0, warning callout, and 5-row table render cleanly on light background | `desktop_1280x800.png`
 - S2: Mobile Home | 390px | Card-like responsive layout, text wraps cleanly, table scrolls naturally without page-level horizontal overflow | `mobile_390x844.png`
+- S8: SHAP Key Drivers Bar Chart | 1200px | Top-3 SHAP contribution counts across monitoring stations; no raw feature names | `s8_shap_drivers.html`
+- S8: Prediction Interval Plot | 1200px | Station-by-station point estimates with conformal uncertainty bounds (80.16% coverage) | `s8_prediction_intervals.html`
+- S9: Municipal Decision Brief | 1200x1600 | Single-page A4 printable document with top-5 actions, 3 patterns, model vs baseline metrics, limitations | `brief.html` / `brief.png`
+- S10: Desktop App Shell | 1280px | Flat design system, 60/40 two-column layout, top bar with real-time station counts, WCAG AA contrast (>=4.5:1), no gradients or glass effects | `s10_desktop_1280.png`
+- S10: Mobile App Shell | 390px | Single-column stacked responsive layout below 768px, readable typography, cards wrap cleanly | `s10_mobile_390.png`
 
 ## 12. Known bugs and blockers
 - None
@@ -425,9 +510,12 @@ Hosting needs no secrets. For S2, no secrets or API keys are required.
 | S5 | 25 | 14 | 87 | 273 |
 | S6 | 30 | 20 | 107 | 253 |
 | S7 | 30 | 22 | 129 | 231 |
+| S8 | 25 | 18 | 147 | 213 |
+| S9 | 25 | 18 | 165 | 195 |
+| S10 | 25 | 20 | 185 | 175 |
 
 ## 15. Exact next action
-Awaiting user approval for Steps 6 and 7 (Features, Baselines, LightGBM Models & Pipeline) completion before proceeding to Step 8 (Explain: SHAP + intervals). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
+Awaiting user approval for Steps 8, 9, and 10 (Explain, Act/Brief, and Design System/App Shell) completion before proceeding to Step 11 (Map, list, station panel). S2 cloud deployment URL pending user deployment on Streamlit Community Cloud.
 
 ## 16. Step report format (required at the end of every step)
 1. What was completed

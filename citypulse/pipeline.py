@@ -27,7 +27,14 @@ from config import (
     PROCESSED_DATA_DIR,
     SAMPLE_DATA_DIR,
 )
+from citypulse.brief import capture_brief_screenshot, generate_brief
 from citypulse.clean import clean, compute_quality_summary, generate_clean_comparison_chart
+from citypulse.explain import (
+    create_driver_chart,
+    create_interval_chart,
+    explain_predictions,
+    train_quantile_regressors,
+)
 from citypulse.fetch_data import VERIFIED_MUMBAI_STATIONS, fetch_pm25, fetch_weather
 from citypulse.features import compute_features, filter_modeling_dataset
 from citypulse.patterns import (
@@ -37,6 +44,7 @@ from citypulse.patterns import (
     persistent_worst_stations,
     render_heatmap_chart,
 )
+from citypulse.recommend import rank_stations
 from citypulse.train import (
     SPLIT_TEST_START,
     create_evaluation_chart,
@@ -177,16 +185,48 @@ def run_pipeline(cached: bool = True) -> int:
     eval_chart_path = OUTPUTS_DIR / "s7_eval_comparison.html"
     create_evaluation_chart(test_df, reg, output_path=eval_chart_path, station_id=first_st_id)
 
+    # Step 6: Model Explanations & Conformal Prediction Intervals (S8)
+    print("\n[Step 6/7] Explaining Risk Drivers & Calibrating Prediction Intervals...")
+    q_low, q_high, delta, coverage_info = train_quantile_regressors(train_df, test_df)
+    expl_df = explain_predictions(
+        clf=clf,
+        feat_df=feat_df,
+        preds_df=preds_df,
+        quality_df=summary_df,
+        q_low=q_low,
+        q_high=q_high,
+        conformal_delta=delta,
+        coverage_pct=coverage_info["calibrated_coverage_pct"],
+    )
+    expl_path = OUTPUTS_DIR / "explanations.parquet"
+    expl_df.to_parquet(expl_path, index=False)
+    create_driver_chart(expl_df, OUTPUTS_DIR / "s8_shap_drivers.html")
+    create_interval_chart(expl_df, OUTPUTS_DIR / "s8_prediction_intervals.html")
+    print(f"Explanations saved: {expl_path} ({coverage_info['calibrated_coverage_pct']}% test coverage)")
+
+    # Step 7: Municipal Recommendation Prioritization & Briefing (S9)
+    print("\n[Step 7/7] Generating Ranked Interventions & Decision Brief...")
+    ranked_df = rank_stations(preds_df, expl_df, top_n=5)
+    ranked_path = OUTPUTS_DIR / "ranked_stations.parquet"
+    ranked_df.to_parquet(ranked_path, index=False)
+
+    brief_html = OUTPUTS_DIR / "brief.html"
+    generate_brief(ranked_df=ranked_df, patterns_data=patterns_output, metrics_data=full_metrics, output_path=brief_html)
+    capture_brief_screenshot(brief_html, OUTPUTS_DIR / "brief.png")
+    print(f"Ranked actions saved: {ranked_path}")
+    print(f"Decision brief saved: {brief_html}")
+
     elapsed = time.time() - t0
     print("\n" + "=" * 80)
     print(f"PIPELINE COMPLETE in {elapsed:.1f}s")
     print("=" * 80)
-    print(f"- Regressor MAE: {full_metrics['lightgbm_regressor']['mae']} µg/m³")
+    print(f"- Regressor MAE: {full_metrics['lightgbm_regressor']['mae']} ug/m3")
     print(f"- Classifier F1:  {full_metrics['lightgbm_classifier']['f1_unhealthy_or_worse']}")
-    print(f"- Persistence MAE: {full_metrics['baselines']['persistence']['mae']} µg/m³")
+    print(f"- Persistence MAE: {full_metrics['baselines']['persistence']['mae']} ug/m3")
     print(f"- Persistence F1:  {full_metrics['baselines']['persistence']['f1_unhealthy_or_worse']}")
     print(f"- Production Decision: {full_metrics['comparison_summary']['production_decision']}")
     print(f"- Predictions saved: {pred_path} ({len(preds_df)} stations)")
+    print(f"- Briefing generated: {brief_html}")
     print("=" * 80)
 
     return 0

@@ -331,3 +331,72 @@ def test_eval_comparison_chart_output():
     assert chart_file.exists(), "s7_eval_comparison.html does not exist."
     assert chart_file.stat().st_size > 10000, "s7_eval_comparison.html is suspiciously small or empty."
 
+
+def test_explanations_artifacts_smoke():
+    """Verify explanations.parquet and SHAP/interval charts exist."""
+    expl_file = OUTPUTS_DIR / "explanations.parquet"
+    drivers_chart = OUTPUTS_DIR / "s8_shap_drivers.html"
+    intervals_chart = OUTPUTS_DIR / "s8_prediction_intervals.html"
+
+    assert expl_file.exists(), "explanations.parquet does not exist."
+    assert drivers_chart.exists(), "s8_shap_drivers.html does not exist."
+    assert intervals_chart.exists(), "s8_prediction_intervals.html does not exist."
+
+    df = pd.read_parquet(expl_file)
+    assert len(df) == 9, f"Expected 9 stations, got {len(df)}"
+
+
+def test_ranked_stations_artifacts_smoke():
+    """Verify ranked_stations.parquet exists and has top 5 stations."""
+    ranked_file = OUTPUTS_DIR / "ranked_stations.parquet"
+    assert ranked_file.exists(), "ranked_stations.parquet does not exist."
+
+    df = pd.read_parquet(ranked_file)
+    assert len(df) == 5, f"Expected top 5 stations, got {len(df)}"
+    assert "risk_score" in df.columns
+    assert "action" in df.columns
+    assert "warning" in df.columns
+
+
+def test_brief_html_and_screenshot_smoke():
+    """Verify brief.html and brief.png exist."""
+    brief_html = OUTPUTS_DIR / "brief.html"
+    brief_png = OUTPUTS_DIR / "brief.png"
+
+    assert brief_html.exists(), "brief.html does not exist."
+    assert brief_html.stat().st_size > 5000, "brief.html is suspiciously small."
+    assert brief_png.exists(), "brief.png does not exist."
+    assert brief_png.stat().st_size > 50000, "brief.png is suspiciously small."
+
+
+def test_design_system_tokens_and_components_smoke():
+    """Verify ui/styles.css and ui/components.py exist and meet design token requirements."""
+    from ui.components import risk_pill, quality_badge, card, big_number
+
+    css_file = Path(__file__).resolve().parent.parent / "ui" / "styles.css"
+    assert css_file.exists(), "ui/styles.css does not exist."
+
+    css_text = css_file.read_text(encoding="utf-8")
+    assert "--bg: #FFFFFF;" in css_text
+    assert "--surface: #F5F5F7;" in css_text
+    assert "--text: #1D1D1F;" in css_text
+    assert "--secondary: #6E6E73;" in css_text
+    assert "--hairline: #D2D2D7;" in css_text
+    assert "--accent: #0071E3;" in css_text
+    assert "--radius-card: 12px;" in css_text
+    assert "prefers-reduced-motion" in css_text
+
+    # Component helpers
+    pill_html = risk_pill("Good")
+    assert "cp-pill-good" in pill_html and "Good" in pill_html
+
+    badge_html = quality_badge("Low")
+    assert "cp-badge-low" in badge_html and "Low" in badge_html
+
+    card_html = card("Test Title", "Test Body")
+    assert "cp-card-title" in card_html and "Test Title" in card_html
+
+    bignum_html = big_number("42", "Test Caption")
+    assert "cp-bignum-val" in bignum_html and "42" in bignum_html
+
+

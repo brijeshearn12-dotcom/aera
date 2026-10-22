@@ -2,9 +2,352 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CityPulse Briefing</title>
+  <title>CityPulse Daily Briefing - Mumbai Air Quality Decision Support</title>
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 10mm 12mm 10mm 12mm;
+    }
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", Inter, system-ui, sans-serif;
+      color: #1D1D1F;
+      background-color: #FFFFFF;
+      font-size: 9.5pt;
+      line-height: 1.35;
+      -webkit-font-smoothing: antialiased;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid #1D1D1F;
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+    .brand h1 {
+      font-size: 18pt;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      color: #1D1D1F;
+    }
+    .brand p {
+      font-size: 9pt;
+      color: #6E6E73;
+    }
+    .meta-box {
+      text-align: right;
+      font-size: 8.5pt;
+      color: #6E6E73;
+    }
+    .meta-box strong {
+      color: #1D1D1F;
+    }
+    .summary-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .stat-card {
+      background-color: #F5F5F7;
+      border: 1px solid #D2D2D7;
+      border-radius: 8px;
+      padding: 6px 10px;
+    }
+    .stat-card .val {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #1D1D1F;
+      line-height: 1.2;
+    }
+    .stat-card .lbl {
+      font-size: 7.5pt;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #6E6E73;
+    }
+    h2 {
+      font-size: 11pt;
+      font-weight: 600;
+      color: #1D1D1F;
+      margin-bottom: 5px;
+      border-bottom: 1px solid #E5E5EA;
+      padding-bottom: 3px;
+    }
+    .section {
+      margin-bottom: 11px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+      margin-bottom: 4px;
+    }
+    th {
+      background-color: #F5F5F7;
+      color: #1D1D1F;
+      font-weight: 600;
+      text-align: left;
+      padding: 5px 6px;
+      border-top: 1px solid #D2D2D7;
+      border-bottom: 1px solid #D2D2D7;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    td {
+      padding: 4.5px 6px;
+      border-bottom: 1px solid #E5E5EA;
+      vertical-align: top;
+    }
+    tr:nth-child(even) td {
+      background-color: #FAFAFC;
+    }
+    .pill {
+      display: inline-block;
+      padding: 1px 7px;
+      border-radius: 999px;
+      font-size: 7.5pt;
+      font-weight: 600;
+      text-align: center;
+    }
+    .pill-good {
+      background-color: #E8F8ED;
+      color: #135E26;
+      border: 1px solid #A3E5B5;
+    }
+    .pill-unhealthy {
+      background-color: #FFF4E5;
+      color: #8A4B00;
+      border: 1px solid #FCD399;
+    }
+    .pill-severe {
+      background-color: #FFEBEA;
+      color: #9C1C14;
+      border: 1px solid #FCA5A0;
+    }
+    .alert-tag {
+      display: inline-block;
+      font-size: 7.5pt;
+      color: #D70015;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+    .patterns-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .pattern-card {
+      background-color: #FFFFFF;
+      border: 1px solid #D2D2D7;
+      border-radius: 6px;
+      padding: 6px 8px;
+    }
+    .pattern-card h3 {
+      font-size: 8.5pt;
+      font-weight: 600;
+      color: #0071E3;
+      margin-bottom: 3px;
+    }
+    .pattern-card p {
+      font-size: 7.8pt;
+      color: #1D1D1F;
+      line-height: 1.3;
+    }
+    .pattern-card .stat {
+      font-size: 7.5pt;
+      color: #6E6E73;
+      margin-top: 3px;
+    }
+    .model-table th, .model-table td {
+      padding: 4px 6px;
+    }
+    .limitations-box {
+      background-color: #F5F5F7;
+      border-left: 3px solid #0071E3;
+      padding: 5px 8px;
+      font-size: 7.5pt;
+      color: #3A3A3C;
+      line-height: 1.35;
+      border-radius: 0 4px 4px 0;
+    }
+    .footer {
+      border-top: 1px solid #D2D2D7;
+      padding-top: 4px;
+      margin-top: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-size: 7.5pt;
+      color: #86868B;
+    }
+    @media print {
+      body {
+        background-color: #FFFFFF !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
 </head>
 <body>
-  <!-- CityPulse municipal pollution-risk briefing template placeholder -->
+
+  <!-- Header -->
+  <div class="header">
+    <div class="brand">
+      <h1>CityPulse Briefing</h1>
+      <p>Municipal Air Quality & Intervention Prioritization • Mumbai Metropolitan Region</p>
+    </div>
+    <div class="meta-box">
+      <div><strong>Forecast Horizon:</strong> Next 24 Hours (t+24h)</div>
+      <div><strong>Issue Date:</strong> {{ as_of_date }}</div>
+      <div><strong>Decision Cycle:</strong> Daily Operations Briefing</div>
+    </div>
+  </div>
+
+  <!-- Summary Statistics Strip -->
+  <div class="summary-strip">
+    <div class="stat-card">
+      <div class="val">{{ total_stations }}</div>
+      <div class="lbl">Monitoring Stations</div>
+    </div>
+    <div class="stat-card">
+      <div class="val" style="color: {{ '#D70015' if at_risk_count > 0 else '#34C759' }};">{{ at_risk_count }}</div>
+      <div class="lbl">At-Risk Stations (>60 µg/m³)</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">{{ median_forecast }} µg/m³</div>
+      <div class="lbl">Citywide Median Forecast</div>
+    </div>
+    <div class="stat-card">
+      <div class="val">{{ conformal_coverage }}%</div>
+      <div class="lbl">Calibrated 80% Coverage</div>
+    </div>
+  </div>
+
+  <!-- Section 1: Prioritized Action Plan -->
+  <div class="section">
+    <h2>1. Top-5 Prioritized Station Interventions</h2>
+    <table>
+      <thead>
+        <tr>
+          <th style="width: 5%;">#</th>
+          <th style="width: 26%;">Monitoring Station</th>
+          <th style="width: 14%;">Forecast & 80% Band</th>
+          <th style="width: 11%;">Risk Tier</th>
+          <th style="width: 8%;">Score</th>
+          <th style="width: 36%;">Recommended Action & Operational Alert</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for st in ranked_stations %}
+        <tr>
+          <td><strong>{{ st.rank }}</strong></td>
+          <td>
+            <strong>{{ st.station_name.split(',')[0] }}</strong><br>
+            <span style="font-size: 7pt; color: #6E6E73;">ID: {{ st.station_id }} • {{ st.quality_label }} Quality</span>
+          </td>
+          <td>
+            <strong>{{ st.predicted_pm25 }} µg/m³</strong><br>
+            <span style="font-size: 7.2pt; color: #6E6E73;">[{{ st.lower }} – {{ st.upper }}]</span>
+          </td>
+          <td>
+            <span class="pill pill-{{ st.predicted_class.lower() }}">{{ st.predicted_class }}</span>
+          </td>
+          <td><strong>{{ "%.2f"|format(st.risk_score) }}</strong></td>
+          <td>
+            <div>{{ st.action }}</div>
+            {% if st.warning %}
+            <div class="alert-tag">{{ st.warning }}</div>
+            {% endif %}
+            <div style="font-size: 7pt; color: #6E6E73; margin-top: 1px;">Key Driver: {{ st.primary_driver }}</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 2: Observed Environmental Patterns -->
+  <div class="section">
+    <h2>2. Recurring Operational Pollution Patterns (Historical Ground Truth)</h2>
+    <div class="patterns-grid">
+      <div class="pattern-card">
+        <h3>Diurnal Morning Peak</h3>
+        <p>{{ patterns.evening_peak.sentence }}</p>
+        <div class="stat">Peak Hour: {{ "%02d:00"|format(patterns.evening_peak.peak_hour) }} IST | Uplift: +{{ patterns.evening_peak.percentage_difference }}%</div>
+      </div>
+      <div class="pattern-card">
+        <h3>Calm-Wind Stagnation</h3>
+        <p>{{ patterns.calm_wind_episodes.sentence }}</p>
+        <div class="stat">Calm Threshold: &le;{{ patterns.calm_wind_episodes.q1_wind_speed }} km/h | Uplift: +{{ patterns.calm_wind_episodes.percentage_difference }}%</div>
+      </div>
+      <div class="pattern-card">
+        <h3>Persistent Worst Corridors</h3>
+        <p>{{ patterns.persistent_worst_stations.sentence }}</p>
+        <div class="stat">Top Corridors: Kherwadi, Byculla, BKC</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: Model vs Baseline Performance -->
+  <div class="section">
+    <h2>3. Predictive Model vs. Baseline Evaluation (Out-of-Time Test Block: Feb 2026)</h2>
+    <table class="model-table">
+      <thead>
+        <tr>
+          <th>Methodology</th>
+          <th>Test Block MAE (µg/m³)</th>
+          <th>Test Block F1 (Unhealthy+)</th>
+          <th>Sample Size</th>
+          <th>Operational Production Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Persistence Benchmark</strong> (Carry forward t to t+24h)</td>
+          <td><strong>{{ metrics.baselines.persistence.mae }}</strong></td>
+          <td><strong>{{ metrics.baselines.persistence.f1_unhealthy_or_worse }}</strong></td>
+          <td>{{ metrics.test_period.total_samples }} obs</td>
+          <td>Benchmark (captures strong diurnal autocorrelation)</td>
+        </tr>
+        <tr>
+          <td><strong>24-Hour Moving Average Baseline</strong></td>
+          <td>{{ metrics.baselines.moving_average_24h.mae }}</td>
+          <td>{{ metrics.baselines.moving_average_24h.f1_unhealthy_or_worse }}</td>
+          <td>{{ metrics.test_period.total_samples }} obs</td>
+          <td>Secondary baseline</td>
+        </tr>
+        <tr>
+          <td><strong>LightGBM Classifier & Regressor (CityPulse ML)</strong></td>
+          <td>{{ metrics.lightgbm_regressor.mae }}</td>
+          <td>{{ metrics.lightgbm_classifier.f1_unhealthy_or_worse }}</td>
+          <td>{{ metrics.test_period.total_samples }} obs</td>
+          <td><strong>Deployed</strong> (Beats moving average; yields calibrated risk probabilities & SHAP)</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Section 4: Operational Limitations & Provenance -->
+  <div class="section">
+    <h2>4. Governance, Provenance & Known Limitations</h2>
+    <div class="limitations-box">
+      <strong>Data Provenance:</strong> Ground-level PM2.5 monitored by CPCB / MPCB stations (aggregated by OpenAQ). Meteorological features from Open-Meteo Historical Archive.<br>
+      <strong>Governing Limitations:</strong> Next-24-hour wind speed and rainfall features use historical observations as numerical weather prediction (NWP) stand-ins. 80% prediction intervals are conformal-calibrated to achieve {{ conformal_coverage }}% empirical coverage on out-of-time tests. Risk scores reflect pure model risk and are never silently altered by data quality flags.
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <div>CityPulse Decision Support • Open-source municipal planning • Built for Mumbai Municipal Corporation</div>
+    <div>Page 1 of 1 (A4 Printable Document)</div>
+  </div>
+
 </body>
 </html>
