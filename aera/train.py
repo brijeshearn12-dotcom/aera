@@ -1,4 +1,4 @@
-"""Model training, baseline evaluation, and inference pipeline for CityPulse.
+"""Model training, baseline evaluation, and inference pipeline for AERA.
 
 Implements:
 1. Strictly chronological train/test splitting (Nov 2025 – Jan 2026 train; Feb 2026 test).
@@ -515,7 +515,7 @@ def create_evaluation_chart(
 def main() -> None:
     """Execute S6/S7 end-to-end model training, baseline evaluation, and inference."""
     print("=" * 80)
-    print("CityPulse Step 6–7: Feature Engineering, Baselines & LightGBM Models")
+    print("AERA Step 6–7: Feature Engineering, Baselines & LightGBM Models")
     print("=" * 80)
 
     clean_path = PROCESSED_DATA_DIR / "clean.parquet"

@@ -1,4 +1,4 @@
-"""Data cleaning, validation, and quality flagging module for CityPulse.
+"""Data cleaning, validation, and quality flagging module for AERA.
 
 Applies QA/QC validation to PM2.5 measurements:
 - Reindexes each station to a regular hourly timeline in Asia/Kolkata timezone.
@@ -391,7 +391,7 @@ def generate_clean_comparison_chart(
 def main() -> None:
     """Execute cleaning pipeline on actual processed S3 data and produce quality summaries."""
     print("=" * 80)
-    print("CityPulse Step 4: Data Cleaning & Quality Flagging")
+    print("AERA Step 4: Data Cleaning & Quality Flagging")
     print("=" * 80)
 
     pm25_path = PROCESSED_DATA_DIR / "pm25_observed.parquet"

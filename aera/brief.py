@@ -1,4 +1,4 @@
-"""Daily decision brief generation module for CityPulse.
+"""Daily decision brief generation module for AERA.
 
 Renders a one-page A4-printable municipal air quality briefing document (brief.html)
 using Jinja2, combining:
@@ -155,7 +155,7 @@ def capture_brief_screenshot(html_path: Path, output_png: Path) -> Optional[Path
 def main() -> None:
     """Execute briefing generation and screenshot capture."""
     print("=" * 80)
-    print("CityPulse Step 9: Municipal Decision Brief Generation")
+    print("AERA Step 9: Municipal Decision Brief Generation")
     print("=" * 80)
 
     brief_html = OUTPUTS_DIR / "brief.html"

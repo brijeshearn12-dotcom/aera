@@ -1,4 +1,4 @@
-"""Geospatial Folium map rendering module for CityPulse monitoring stations.
+"""Geospatial Folium map rendering module for AERA monitoring stations.
 
 Features:
 - Folium map centred on Mumbai with CartoDB Positron light tile styling.

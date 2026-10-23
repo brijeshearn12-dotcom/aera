@@ -1,4 +1,4 @@
-"""Model explainability and prediction intervals module for CityPulse.
+"""Model explainability and prediction intervals module for AERA.
 
 Uses SHAP (TreeExplainer) to extract feature contributions for the predicted class
 and maps them to plain-language phrases explaining whether each driver raises or lowers
@@ -379,7 +379,7 @@ def create_interval_chart(expl_df: pd.DataFrame, output_path: Path) -> Path:
 def main() -> None:
     """Run S8 explanation generation, interval calibration, and outputs."""
     print("=" * 80)
-    print("CityPulse Step 8: SHAP Explanations & Calibrated Prediction Intervals")
+    print("AERA Step 8: SHAP Explanations & Calibrated Prediction Intervals")
     print("=" * 80)
 
     clf_path = MODELS_DIR / "clf.joblib"

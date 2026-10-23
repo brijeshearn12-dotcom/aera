@@ -100,7 +100,7 @@ def test_brief_html_generation_and_contract():
     html_content = brief_file.read_text(encoding="utf-8")
 
     # Check key sections and terms
-    assert ("AERA Briefing" in html_content) or ("CityPulse Briefing" in html_content)
+    assert "AERA Briefing" in html_content
     assert "Top-5 Prioritized Station Interventions" in html_content
     assert "Recurring Operational Pollution Patterns" in html_content
     assert "Predictive Model vs. Baseline Evaluation" in html_content

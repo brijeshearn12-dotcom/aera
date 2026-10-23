@@ -1,4 +1,4 @@
-"""Unit tests for CityPulse data cleaning and QA/QC quality flagging.
+"""Unit tests for AERA data cleaning and QA/QC quality flagging.
 
 All tests utilize clearly labelled synthetic fixtures—never real observations—
 to verify the five contractual cleaning requirements:

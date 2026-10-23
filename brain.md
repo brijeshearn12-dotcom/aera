@@ -1,4 +1,4 @@
-# brain.md: CityPulse permanent source of truth
+# brain.md: AERA permanent source of truth
 
 > RULES (Antigravity must follow these every step)  
 > 1. Read this file and TASKS.md before starting any step. Update both at the END of every step.  

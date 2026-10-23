@@ -1,1 +1,1 @@
-"""CityPulse air quality analytics and forecasting package."""
+"""AERA air quality analytics and forecasting package."""

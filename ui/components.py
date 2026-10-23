@@ -1,4 +1,4 @@
-"""Reusable design system UI components for the CityPulse application.
+"""Reusable design system UI components for the AERA application.
 
 Provides accessible, contrast-compliant visual elements:
 - risk_pill(label): Good, Unhealthy, Severe pill with contrast >= 4.5:1.

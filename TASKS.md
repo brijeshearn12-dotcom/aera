@@ -1,4 +1,4 @@
-# TASKS.md: CityPulse
+# TASKS.md: AERA
 
 Status: NOT STARTED | IN PROGRESS | BLOCKED | VERIFIED | DEFERRED  
 Priority: P0 = mandatory MVP, P1 = important, P2 = optional  

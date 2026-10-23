@@ -1,4 +1,4 @@
-"""Recommendation and prioritization engine for CityPulse intervention actions.
+"""Recommendation and prioritization engine for AERA intervention actions.
 
 Ranks monitoring stations using an explicit risk formula:
     risk_score = (p_unhealthy + p_severe) * severity_weight
@@ -190,7 +190,7 @@ def rank_stations(
 def main() -> None:
     """Execute recommendation ranking and save ranked outputs."""
     print("=" * 80)
-    print("CityPulse Step 9: Recommendation & Intervention Prioritization")
+    print("AERA Step 9: Recommendation & Intervention Prioritization")
     print("=" * 80)
 
     pred_path = OUTPUTS_DIR / "predictions.parquet"

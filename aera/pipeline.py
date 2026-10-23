@@ -1,6 +1,6 @@
 """End-to-end data processing, feature engineering, and model training pipeline.
 
-Coordinates the CityPulse execution:
+Coordinates the AERA execution:
 1. Ingestion / Caching: OpenAQ S3 and Open-Meteo weather (or offline cached datasets).
 2. QA/QC Cleaning: Outlier flagging, stuck sensor detection, and regular timeline reindexing.
 3. Pattern Discovery: Evening peak, calm wind stagnation, and persistent hot spot detection.
@@ -59,7 +59,7 @@ logger = logging.getLogger(__name__)
 
 
 def run_pipeline(cached: bool = True) -> int:
-    """Run the complete CityPulse pipeline end-to-end.
+    """Run the complete AERA pipeline end-to-end.
 
     Parameters
     ----------
@@ -69,7 +69,7 @@ def run_pipeline(cached: bool = True) -> int:
     """
     t0 = time.time()
     print("=" * 80)
-    print(f"CityPulse End-to-End Pipeline [Mode: {'CACHED (Offline)' if cached else 'LIVE (Network)'}]")
+    print(f"AERA End-to-End Pipeline [Mode: {'CACHED (Offline)' if cached else 'LIVE (Network)'}]")
     print("=" * 80)
 
     pm25_raw_path = PROCESSED_DATA_DIR / "pm25_observed.parquet"
@@ -234,7 +234,7 @@ def run_pipeline(cached: bool = True) -> int:
 
 def main() -> None:
     """Command-line entry point."""
-    parser = argparse.ArgumentParser(description="CityPulse End-to-End Pipeline")
+    parser = argparse.ArgumentParser(description="AERA End-to-End Pipeline")
     parser.add_argument(
         "--cached",
         action="store_true",

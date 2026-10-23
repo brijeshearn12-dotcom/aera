@@ -493,7 +493,7 @@ def generate_visual_quality_check(
 def main() -> None:
     """Run end-to-end ingestion, quality reporting, caching, and visual verification."""
     print("=" * 80)
-    print("CityPulse Step 3: Verified Mumbai Data Ingestion & Quality Audit")
+    print("AERA Step 3: Verified Mumbai Data Ingestion & Quality Audit")
     print("=" * 80)
 
     start_date = "2025-11-01"
@@ -550,7 +550,7 @@ def main() -> None:
     sample_weather.to_parquet(sample_weather_path, index=False)
 
     metadata = {
-        "dataset_name": "CityPulse Mumbai Real Sample (30-day / 3-station)",
+        "dataset_name": "AERA Mumbai Real Sample (30-day / 3-station)",
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "date_range": {
             "start": "2025-12-01T00:00:00Z",

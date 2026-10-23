@@ -1,4 +1,4 @@
-"""Plotly time-series and diagnostic chart components for CityPulse.
+"""Plotly time-series and diagnostic chart components for AERA.
 
 Adheres strictly to project UX constraints:
 - D5: 24h chart displays last 24h actual observations + single forecast point with 80% band

@@ -337,7 +337,7 @@ def render_heatmap_chart(heatmap_df: pd.DataFrame, output_path: Path) -> Path:
 def main() -> None:
     """Execute pattern discovery on actual cleaned data and export outputs."""
     print("=" * 80)
-    print("CityPulse Step 5: Discover Recurring Pollution Patterns")
+    print("AERA Step 5: Discover Recurring Pollution Patterns")
     print("=" * 80)
 
     clean_path = PROCESSED_DATA_DIR / "clean.parquet"

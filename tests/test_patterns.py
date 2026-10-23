@@ -1,4 +1,4 @@
-"""Unit tests for CityPulse recurring pattern discovery (patterns.py).
+"""Unit tests for AERA recurring pattern discovery (patterns.py).
 
 All tests utilize clearly labelled synthetic fixtures to verify:
 1. Required output keys and JSON serialization.

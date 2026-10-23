@@ -1,4 +1,4 @@
-"""Feature engineering module for CityPulse PM2.5 forecasting.
+"""Feature engineering module for AERA PM2.5 forecasting.
 
 Generates temporal lags, rolling aggregations, calendar features, weather encodings,
 and forward-looking weather forecast stand-ins for 24-hour horizon forecasting.
@@ -234,7 +234,7 @@ def get_feature_columns() -> List[str]:
 def main() -> None:
     """Run feature engineering on processed clean data and save output."""
     print("=" * 80)
-    print("CityPulse Step 6: Feature Engineering")
+    print("AERA Step 6: Feature Engineering")
     print("=" * 80)
 
     clean_path = PROCESSED_DATA_DIR / "clean.parquet"

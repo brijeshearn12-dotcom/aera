@@ -1,4 +1,4 @@
-"""Configuration constants and path definitions for CityPulse."""
+"""Configuration constants and path definitions for AERA."""
 
 from pathlib import Path
 

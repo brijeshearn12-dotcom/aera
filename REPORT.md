@@ -1,7 +1,7 @@
-# CityPulse Technical Analysis & Modeling Report (`REPORT.md`)
+# AERA Technical Analysis & Modeling Report (`REPORT.md`)
 ### Exploratory Data Analysis, Baseline Benchmarking & Production Decision
 
-[![Project](https://img.shields.io/badge/Project-CityPulse%20%2F%20AERA-blue.svg)](README.md)
+[![Project](https://img.shields.io/badge/Project-AERA-blue.svg)](README.md)
 [![Target Horizon](https://img.shields.io/badge/Horizon-Next--24--Hour%20PM2.5-orange.svg)](aera/train.py)
 [![Evaluation Split](https://img.shields.io/badge/Validation-Strictly%20Chronological-brightgreen.svg)](data/outputs/model_metrics.json)
 [![Conformal Band](https://img.shields.io/badge/Coverage-80.16%25%20(80%25%20Target)-purple.svg)](aera/explain.py)
@@ -10,7 +10,7 @@
 
 ## Executive Overview
 
-This report documents the empirical exploratory data analysis (EDA), time-series feature engineering, baseline benchmarking, and model evaluation for **CityPulse** (AERA), a Mumbai-focused municipal air-quality decision support system. 
+This report documents the empirical exploratory data analysis (EDA), time-series feature engineering, baseline benchmarking, and model evaluation for **AERA** (*Air Environment Risk Assessment*), a Mumbai-focused municipal air-quality decision support system. 
 
 All figures, metric tables, and confusion matrices in this report are programmatically generated and directly verifiable against the serialized output files in [`data/outputs/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/outputs/) and [`data/processed/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/processed/).
 

@@ -1,4 +1,4 @@
-"""CityPulse — Municipal Air Quality Decision Support System for Mumbai.
+"""AERA — Municipal Air Quality Decision Support System for Mumbai.
 
 Interactive operational dashboard implementing:
 - Flat Apple/Linear design system (WCAG AA >= 4.5:1 contrast, no gradients or glass effects).

@@ -1,7 +1,7 @@
 <div align="center">
 
-# CityPulse
-### Next-24-Hour PM2.5 Risk Forecasting & Municipal Decision Support for Mumbai
+# AERA
+### Air Environment Risk Assessment: Next-24-Hour PM2.5 Risk Forecasting & Municipal Decision Support for Mumbai
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-Streamlit%20Cloud-FF4B4B?style=for-the-badge&logo=streamlit)](https://aera-airenvriskanalysis.streamlit.app/)
 [![Python 3.11](https://img.shields.io/badge/Python-3.11.9-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org/downloads/release/python-3119/)
@@ -12,18 +12,12 @@
 [![Jurisdiction](https://img.shields.io/badge/Jurisdiction-Mumbai%2C%20India%20(BMC%20%2F%20MPCB)-orange?style=flat)](https://cpcb.nic.in/)
 
 <p align="center">
-  <b>A transparent, evidence-driven operational prototype translating continuous ambient air observations into station-level forecasts, calibrated conformal uncertainty bands, interpretable SHAP drivers, and prioritized municipal action directives.</b>
+  <b>A transparent, evidence-driven operational decision-support system translating continuous ambient air observations into station-level forecasts, calibrated conformal uncertainty bands, interpretable SHAP drivers, and prioritized municipal action directives.</b>
 </p>
 
 [Explore Live Application](https://aera-airenvriskanalysis.streamlit.app/) • [Methodological Research](docs/research.md) • [System Architecture](docs/architecture.mmd) • [Data Pipeline](docs/data-pipeline.mmd)
 
 </div>
-
----
-
-> [!NOTE]
-> **Project Identity & Deployment Branding Notice**  
-> This project is named **CityPulse**. In the codebase and live cloud deployment, you will observe the brand and repository slug **AERA** (*Air Environment Risk Assessment* / *Air Environment Risk Analysis*), which served as the operational development codename. Both names refer to the exact same system: the live deployment at [https://aera-airenvriskanalysis.streamlit.app/](https://aera-airenvriskanalysis.streamlit.app/) runs this repository directly.
 
 ---
 
@@ -62,9 +56,9 @@ Municipal environmental officers within the **Brihanmumbai Municipal Corporation
 3. **Black-box neural networks provide point estimates without uncertainty**, creating mistrust when unpredicted weather shifts alter outcomes.
 4. **Data platforms rarely link forecasts to action**, leaving officers without prioritized guidance on where to dispatch mobile anti-smog guns, street sweepers, or construction halting notices.
 
-### The CityPulse Solution
-CityPulse provides an interpretable, operational workflow that bridges ambient monitoring and municipal action:
-- **Decision D5 Forecasts**: Rather than inventing hourly curves that exceed meteorological predictability, CityPulse anchors the past 24 hours of verified ground observations to a single $t+24\text{h}$ risk forecast.
+### The AERA Solution
+AERA provides an interpretable, operational workflow that bridges ambient monitoring and municipal action:
+- **Decision D5 Forecasts**: Rather than inventing hourly curves that exceed meteorological predictability, AERA anchors the past 24 hours of verified ground observations to a single $t+24\text{h}$ risk forecast.
 - **Calibrated Conformal Prediction Bands**: Provides distribution-free 80% prediction intervals calibrated via split conformal inference, protecting officers against overconfident point forecasts.
 - **Plain-Language SHAP Drivers**: Explains *why* risk is elevated at a given station without ML jargon (e.g., *"Elevated PM2.5 24h prior: +8.4 µg/m³"* or *"Ventilating sea breeze: -5.1 µg/m³"*).
 - **Ranked Municipal Directives**: Applies deterministic rule-based logic to prioritize stations by exceedance probability and recommend targeted municipal interventions.
@@ -76,37 +70,37 @@ CityPulse provides an interpretable, operational workflow that bridges ambient m
 
 ## 2. Visual Showcase
 
-The screenshots below depict genuine interface views of the running CityPulse application.
+The screenshots below depict genuine interface views of the running AERA application.
 
 ### Main Operational Dashboard & Interactive Station Map
 The desktop interface implements a 60/40 split-screen layout with WCAG AA compliant contrast ($\ge 4.5:1$). The left viewport hosts an interactive Folium station map and detailed time-series inspection panel; the right viewport displays the prioritized "Needs Attention" municipal action queue.
 
-![CityPulse Desktop Dashboard](assets/dashboard.png)
+![AERA Desktop Dashboard](assets/dashboard.png)
 
 ### Selected Station Forecast & Interpretable SHAP Attribution
 Selecting any monitoring station updates the D5 time-series view (past 24 hours of actual observations linked to the $t+24\text{h}$ forecast with an 80% conformal uncertainty band) and unpacks the top three localized physical drivers.
 
-![Station Forecast and SHAP Attribution](assets/station-detail.png)
+![AERA Station Forecast and SHAP Attribution](assets/station-detail.png)
 
 ### Responsive Viewports (Tablet & Mobile)
 The interface is responsive across desktop, tablet (768px), and mobile (390px) viewports without horizontal scrolling or clipped telemetry cards.
 
 | Tablet Viewport (768px) | Mobile Viewport (390px) |
 |:---:|:---:|
-| ![Tablet View](assets/tablet-view.png) | ![Mobile View](assets/mobile-view.png) |
+| ![AERA Tablet View](assets/tablet-view.png) | ![AERA Mobile View](assets/mobile-view.png) |
 
 ### Downloadable A4 Municipal Decision Brief
 A one-page printable executive brief formatted with dedicated print CSS, summarizing city-wide risk status, top prioritized interventions, empirical patterns, and model telemetry for morning municipal briefings.
 
 <div align="center">
-  <img src="assets/municipal-brief.png" alt="A4 Printable Municipal Brief" width="650">
+  <img src="assets/municipal-brief.png" alt="AERA A4 Printable Municipal Brief" width="650">
 </div>
 
 ---
 
 ## 3. Problem Statement & Operational Solution
 
-To maintain scientific credibility and prevent operational misapplication, CityPulse strictly demarcates four distinct data tiers:
+To maintain scientific credibility and prevent operational misapplication, AERA strictly demarcates four distinct data tiers:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -154,7 +148,7 @@ Every capability listed below is implemented in source code, covered by automate
 
 ## 5. System Architecture
 
-The following diagram illustrates the verified end-to-end architecture of CityPulse. Note the explicit representation of the historical weather stand-in.
+The following diagram illustrates the verified end-to-end architecture of AERA. Note the explicit representation of the historical weather stand-in.
 
 ```mermaid
 graph TD
@@ -308,9 +302,9 @@ flowchart TD
 
 ## 7. Technology Stack
 
-CityPulse relies on a focused, minimal dependency tree verified against [requirements.txt](requirements.txt):
+AERA relies on a focused, minimal dependency tree verified against [requirements.txt](requirements.txt):
 
-| Category | Technology | Version | Purpose in CityPulse |
+| Category | Technology | Version | Purpose in AERA |
 |---|---|---|---|
 | **Core Runtime** | Python | 3.11.9 | Base environment runtime (configured in `runtime.txt`). |
 | **User Interface** | Streamlit | 1.39.0 | Primary reactive web dashboard framework. |
@@ -329,7 +323,7 @@ CityPulse relies on a focused, minimal dependency tree verified against [require
 ## 8. Machine Learning Methodology
 
 ### 1. Forecasting Horizon & Target Formulation
-CityPulse targets a strict 24-hour forecasting horizon ($t+24\text{h}$) at the individual monitoring station level:
+AERA targets a strict 24-hour forecasting horizon ($t+24\text{h}$) at the individual monitoring station level:
 - **Continuous Target ($y_{\text{reg}}$):** The observed $\text{PM}_{2.5}$ concentration ($\mu\text{g/m}^3$) exactly 24 hours into the future.
 - **Categorical Target ($y_{\text{clf}}$):** Air quality tier derived from standard CPCB thresholds:
   - **Good:** $\le 60\,\mu\text{g/m}^3$ (Complies with Indian 24-hour National Ambient Air Quality Standard).
@@ -346,7 +340,7 @@ The model utilizes 22 causal features plus 2 explicit meteorological stand-ins:
 - **Automated Leakage Prevention:** Temporal leakage is guarded by automated test contracts (`tests/test_features.py` and `tests/test_pipeline_smoke.py`), which verify that perturbing future observations produces zero effect on historical predictions.
 
 ### 3. Chronological Train / Test Split
-Environmental time-series data exhibits intense temporal autocorrelation. Standard random $k$-fold cross-validation results in severe data leakage and artificially inflated scores. CityPulse enforces a strict chronological split:
+Environmental time-series data exhibits intense temporal autocorrelation. Standard random $k$-fold cross-validation results in severe data leakage and artificially inflated scores. AERA enforces a strict chronological split:
 - **Training Period:** November 1, 2025 00:30 IST to January 31, 2026 23:30 IST (**14,551 hourly samples**; 9,004 Good, 5,478 Unhealthy, 69 Severe).
 - **Held-Out Test Period:** February 1, 2026 00:30 IST to February 27, 2026 23:30 IST (**3,654 hourly samples**; 2,756 Good, 898 Unhealthy, 0 Severe).
 
@@ -354,10 +348,10 @@ Environmental time-series data exhibits intense temporal autocorrelation. Standa
 In the training block, "Severe" events represent only 0.47% of observations (69 out of 14,551). The LightGBM classifier addresses this via `class_weight="balanced"`, penalizing minority-class classification errors inversely proportional to class frequencies.
 
 ### 5. Uncertainty Quantification via Split Conformal Inference
-Uncalibrated point forecasts pose severe risks for public health decisions. CityPulse implements distribution-free prediction intervals:
+Uncalibrated point forecasts pose severe risks for public health decisions. AERA implements distribution-free prediction intervals:
 1. Two auxiliary LightGBM models are trained with quantile objective functions at $\alpha = 0.10$ and $\alpha = 0.90$.
 2. On untouched test observations, raw quantile bounds achieved only **70.83% empirical coverage** (undercovering the 80% target).
-3. Using split conformal prediction on an independent validation window, CityPulse computed a non-conformity calibration delta:
+3. Using split conformal prediction on an independent validation window, AERA computed a non-conformity calibration delta:
    $$\delta = 4.67\,\mu\text{g/m}^3$$
 4. Calibrated prediction bands $[y_{\text{pred}} - \delta, y_{\text{pred}} + \delta]$ achieve an empirical coverage of **80.16%** across all 3,654 test hours.
 
@@ -404,7 +398,7 @@ All performance metrics below are read directly from committed, verified evaluat
 
 ## 10. Data Sources & Provenance
 
-CityPulse uses verified historical observations from official environmental monitoring authorities:
+AERA uses verified historical observations from official environmental monitoring authorities:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -440,7 +434,7 @@ For complete licensing terms, API schemas, and preprocessing logs, refer to [DAT
 
 ## 11. Research References
 
-A curated selection of primary references supporting CityPulse is provided below. The complete annotated bibliography is available in [docs/research.md](docs/research.md).
+A curated selection of primary references supporting AERA is provided below. The complete annotated bibliography is available in [docs/research.md](docs/research.md).
 
 1. **WHO Global Air Quality Guidelines (2021)**  
    *World Health Organization.* Recommends interim targets and air quality limits for fine particulate matter ($\text{PM}_{2.5}$).  
@@ -455,11 +449,11 @@ A curated selection of primary references supporting CityPulse is provided below
    [NeurIPS Paper](https://papers.nips.cc/paper_files/paper/2017/hash/6449f44a102fde848669bdd9eb6b76fa-Abstract.html)
 
 4. **A Unified Approach to Interpreting Model Predictions (TreeSHAP)**  
-   *Lundberg & Lee (NeurIPS 2017).* Exact additive feature attribution methods powering CityPulse's plain-language operational drivers.  
+   *Lundberg & Lee (NeurIPS 2017).* Exact additive feature attribution methods powering AERA's plain-language operational drivers.  
    [NeurIPS Paper](https://papers.nips.cc/paper_files/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html)
 
 5. **A Gentle Introduction to Conformal Prediction and Distribution-Free Uncertainty Quantification**  
-   *Angelopoulos & Bates (2021).* Mathematical foundation for the split-conformal prediction intervals utilized in CityPulse.  
+   *Angelopoulos & Bates (2021).* Mathematical foundation for the split-conformal prediction intervals utilized in AERA.  
    [arXiv:2107.07511](https://arxiv.org/abs/2107.07511)
 
 6. **Forecasting: Principles and Practice (3rd ed)**  
@@ -470,7 +464,7 @@ A curated selection of primary references supporting CityPulse is provided below
 
 ## 12. Installation & Quickstart
 
-CityPulse is fully reproducible on **Windows (PowerShell)** and **macOS / Linux (Bash)**.
+AERA is fully reproducible on **Windows (PowerShell)** and **macOS / Linux (Bash)**.
 
 ### Prerequisites
 - **Python:** Version `3.11.x` (tested and verified on Python `3.11.9`).
@@ -507,7 +501,7 @@ python -m pip install -r requirements.txt
 ```
 
 #### 4. Configure Environment (Optional)
-CityPulse includes safe defaults in [.env.example](.env.example). No API keys or external secrets are required to run the cached pipeline or launch the dashboard:
+AERA includes safe defaults in [.env.example](.env.example). No API keys or external secrets are required to run the cached pipeline or launch the dashboard:
 ```bash
 # Optional: copy example configuration
 cp .env.example .env
@@ -533,7 +527,7 @@ Local URL: http://localhost:8501
 
 ## 13. User Journey & Interface Guide
 
-When an environmental officer opens CityPulse, they follow a structured 9-step decision workflow:
+When an environmental officer opens AERA, they follow a structured 9-step decision workflow:
 
 ```
 [1. Check Status Bar] ──► [2. Inspect Map] ──► [3. Prioritized List]
@@ -596,7 +590,7 @@ Test coverage includes:
 ```
 aera/
 ├── .streamlit/                 # Streamlit server & theme configuration
-├── aera/                       # Core CityPulse Python package
+├── aera/                       # Core AERA Python package
 │   ├── __init__.py             # Package declaration
 │   ├── brief.py                # Jinja2 executive brief compiler
 │   ├── clean.py                # QA/QC sensor cleaning & data quality scoring
@@ -659,7 +653,7 @@ aera/
 
 ## 16. Operational Limitations & Responsible Use
 
-To ensure responsible governance, CityPulse explicitly discloses its operational boundaries:
+To ensure responsible governance, AERA explicitly discloses its operational boundaries:
 
 1. **Sparse Monitoring Network:** The system covers 9 continuous CAAQMS stations across Mumbai. Spatial interpolation between stations must be interpreted cautiously, as localized topography and street-canyon effects create micro-climates.
 2. **Missing Sensor Telemetry:** Real-world sensor dropouts occur frequently. During the historical period, missing observations ranged from 14.1% (Mindspace) to 34.8% (Kandivali West). Missing values $>3$ hours are flagged, not interpolated.
@@ -668,11 +662,11 @@ To ensure responsible governance, CityPulse explicitly discloses its operational
 5. **Single Meteorology Grid:** Surface weather is derived from a single grid coordinate (19.076°N, 72.878°E), which does not capture hyper-local coastal sea-breeze micro-fronts across the peninsula.
 6. **Persistence Baseline Competitiveness:** The model does not outperform naive 24-hour persistence on MAE or Unhealthy F1. While LightGBM provides critical risk probabilities and SHAP explanations, municipal teams must remain aware of this baseline trade-off.
 7. **Empirical Associations, Not Causality:** SHAP attributions reflect statistical associations within the training dataset. They do not constitute experimental proof of causation.
-8. **No Abatement Guarantee:** Recommended municipal interventions (mist cannons, dust stabilization) reflect established operational best practices. CityPulse does not guarantee that executing an action will achieve immediate regulatory compliance.
+8. **No Abatement Guarantee:** Recommended municipal interventions (mist cannons, dust stabilization) reflect established operational best practices. AERA does not guarantee that executing an action will achieve immediate regulatory compliance.
 
 > [!CAUTION]
 > ### Mandatory Advisory Notice
-> **CityPulse is a decision-support prototype, not an official pollution alert, certified forecasting service, or substitute for authoritative monitoring and public-health guidance.**  
+> **AERA is a decision-support prototype, not an official pollution alert, certified forecasting service, or substitute for authoritative monitoring and public-health guidance.**  
 > Municipal personnel, public health authorities, and citizens must always defer to statutory declarations issued by the Central Pollution Control Board (CPCB) and Maharashtra Pollution Control Board (MPCB).
 
 ---
@@ -692,7 +686,7 @@ The following enhancements represent planned future development, distinctly sepa
 ## 18. Contributing, License & Credits
 
 ### Contributing
-Contributions to CityPulse are welcome. To ensure code quality and data integrity:
+Contributions to AERA are welcome. To ensure code quality and data integrity:
 1. Fork the repository and create a feature branch (`git checkout -b feature/improvement`).
 2. Verify all 43 tests pass (`python -m pytest`).
 3. Run the credential scan script (`python scripts/scan_secrets.py`) to confirm zero secrets are committed.

@@ -1,7 +1,7 @@
-# CityPulse Data Statement (`DATA.md`)
+# AERA Data Statement (`DATA.md`)
 ### Data Provenance, Sensor Telemetry & Ingestion Contracts
 
-[![Project](https://img.shields.io/badge/Project-CityPulse%20%2F%20AERA-blue.svg)](README.md)
+[![Project](https://img.shields.io/badge/Project-AERA-blue.svg)](README.md)
 [![Data Window](https://img.shields.io/badge/Data%20Window-Nov%202025%20--%20Feb%202026-orange.svg)](data/processed/)
 [![Coverage](https://img.shields.io/badge/Stations-9%20Mumbai%20CAAQMS-brightgreen.svg)](https://openaq.org/)
 [![Temporal Resolution](https://img.shields.io/badge/Resolution-Hourly%20(IST)-purple.svg)](data/processed/clean.parquet)
@@ -10,7 +10,7 @@
 
 ## 1. Executive Summary & Scope
 
-This document provides a comprehensive data sheet and provenance record for **CityPulse** (operational repository slug: **AERA**). The system operates on continuous ambient air quality measurements and high-resolution surface meteorology for the Mumbai Metropolitan Region across a 120-day winter evaluation block (November 1, 2025 00:30 IST to February 28, 2026 23:30 IST).
+This document provides a comprehensive data sheet and provenance record for **AERA** (*Air Environment Risk Assessment*). The system operates on continuous ambient air quality measurements and high-resolution surface meteorology for the Mumbai Metropolitan Region across a 120-day winter evaluation block (November 1, 2025 00:30 IST to February 28, 2026 23:30 IST).
 
 All numbers reported in this document are programmatically verified against committed parquet and JSON artifacts in [`data/processed/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/processed/) and [`data/outputs/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/outputs/).
 
@@ -71,7 +71,7 @@ Missingness is virtually uniform across the diurnal cycle (18% to 23% missing fo
 
 ## 5. Artifact Directory Structure
 
-CityPulse enforces strict separation between raw, processed, sample, and output artifacts:
+AERA enforces strict separation between raw, processed, sample, and output artifacts:
 
 | Directory | Persistence & Git Status | Contents & Purpose |
 |---|---|---|
