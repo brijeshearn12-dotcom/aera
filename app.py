@@ -145,6 +145,10 @@ if "selected_station_id" not in st.session_state:
     else:
         st.session_state["selected_station_id"] = default_station_id
 
+# Keep dropdown state initialized in sync
+if "station_dropdown_selector" not in st.session_state:
+    st.session_state["station_dropdown_selector"] = st.session_state["selected_station_id"]
+
 
 # -----------------------------------------------------------------------------
 # 1. Top Bar Shell (Title, Location, As-Of Date, Real-time Status)
@@ -227,6 +231,7 @@ with col_map:
                     new_id = int(s_row["station_id"])
                     if new_id != st.session_state["selected_station_id"]:
                         st.session_state["selected_station_id"] = new_id
+                        st.session_state["station_dropdown_selector"] = new_id
                         st.rerun()
 
     # Fallback / Direct Station Selectbox
@@ -238,20 +243,20 @@ with col_map:
             station_options[s_id] = s_display
 
         station_ids_list = list(station_options.keys())
-        curr_id = int(st.session_state.get("selected_station_id", 0))
+        curr_id = int(st.session_state.get("selected_station_id", default_station_id))
         default_idx = station_ids_list.index(curr_id) if curr_id in station_ids_list else 0
 
-        selected_from_dropdown = st.selectbox(
+        def on_dropdown_change():
+            st.session_state["selected_station_id"] = st.session_state["station_dropdown_selector"]
+
+        st.selectbox(
             "Select station to inspect:",
             options=station_ids_list,
             index=default_idx,
             format_func=lambda x: station_options.get(x, str(x)),
             key="station_dropdown_selector",
+            on_change=on_dropdown_change,
         )
-
-        if selected_from_dropdown != st.session_state["selected_station_id"]:
-            st.session_state["selected_station_id"] = selected_from_dropdown
-            st.rerun()
     else:
         st.info("No monitoring station predictions available to select.")
 
@@ -407,6 +412,7 @@ with col_list:
             btn_label = f"✓ Selected (#{r_rank})" if is_curr_selected else f"Inspect Station #{r_rank}"
             if st.button(btn_label, key=f"btn_select_st_{r_id}", use_container_width=True, disabled=is_curr_selected):
                 st.session_state["selected_station_id"] = r_id
+                st.session_state["station_dropdown_selector"] = r_id
                 st.rerun()
     else:
         st.info("No prioritized stations available.")
