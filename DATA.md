@@ -1,0 +1,91 @@
+# CityPulse Data Statement (`DATA.md`)
+### Data Provenance, Sensor Telemetry & Ingestion Contracts
+
+[![Project](https://img.shields.io/badge/Project-CityPulse%20%2F%20AERA-blue.svg)](README.md)
+[![Data Window](https://img.shields.io/badge/Data%20Window-Nov%202025%20--%20Feb%202026-orange.svg)](data/processed/)
+[![Coverage](https://img.shields.io/badge/Stations-9%20Mumbai%20CAAQMS-brightgreen.svg)](https://openaq.org/)
+[![Temporal Resolution](https://img.shields.io/badge/Resolution-Hourly%20(IST)-purple.svg)](data/processed/clean.parquet)
+
+---
+
+## 1. Executive Summary & Scope
+
+This document provides a comprehensive data sheet and provenance record for **CityPulse** (operational repository slug: **AERA**). The system operates on continuous ambient air quality measurements and high-resolution surface meteorology for the Mumbai Metropolitan Region across a 120-day winter evaluation block (November 1, 2025 00:30 IST to February 28, 2026 23:30 IST).
+
+All numbers reported in this document are programmatically verified against committed parquet and JSON artifacts in [`data/processed/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/processed/) and [`data/outputs/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/outputs/).
+
+---
+
+## 2. Primary External Data Sources
+
+| Source Entity | Data Type & Resolution | Access Endpoint & Terms | Attribution & Licensing Requirements | Preprocessing Pipeline Applied |
+|---|---|---|---|---|
+| **Central Pollution Control Board (CPCB) & Maharashtra Pollution Control Board (MPCB)** | Ground-truth ambient $\text{PM}_{2.5}$ ($\mu\text{g/m}^3$) continuous hourly observations from 9 CAAQMS stations. | Fetched via the [OpenAQ Public AWS S3 Archive](https://registry.opendata.aws/openaq/) (`s3://openaq-data-archive/records/csv.gz/locationid={id}/...`). OpenAQ platform terms: [docs.openaq.org/about/terms](https://docs.openaq.org/about/terms). | Data aggregated by OpenAQ from CPCB/MPCB under open government data principles. Standard non-commercial / research attribution required. | Sub-hourly readings averaged into hourly means (UTC) and aligned to Asia/Kolkata (IST); reindexed to an exact 1-hour regular grid per station (2,880 slots/station); out-of-bounds readings ($<0$ or $>1000\,\mu\text{g/m}^3$) and sensor flatlines ($\ge 6$ identical consecutive readings) excised; short gaps ($\le 3\,\text{h}$) linearly interpolated; long gaps ($> 3\,\text{h}$) flagged with `flag_gap`. |
+| **Open-Meteo Historical Weather Archive** | Surface meteorology (2m temperature, 2m relative humidity, 10m wind speed, 10m wind direction, boundary layer mixing height, and precipitation sum). | Fetched via the [Open-Meteo Historical Weather API](https://archive-api.open-meteo.com/v1/archive) (ERA5 reanalysis model). Terms: [open-meteo.com/en/terms](https://open-meteo.com/en/terms). | Licensed under Creative Commons Attribution 4.0 International (CC-BY 4.0). Requires explicit credit: *"Weather data by Open-Meteo.com"*. Free API tier for non-commercial research. | Queried for central Mumbai coordinates (19.076°N, 72.8777°E); UTC converted to IST; joined to particulate data on exact timestamp without row duplication; wind direction decomposed into orthogonal sine and cosine components; 24-hour rolling rainfall sum calculated. |
+
+---
+
+## 3. Monitored Stations Inventory (9 Mumbai CAAQMS)
+
+The system ingests 9 verified continuous ambient stations across Mumbai representing distinct geographical and micro-climatic urban zones:
+
+| Station ID | Official Monitoring Station Name | Ward / Geographic Zone | Latitude | Longitude | Total Hourly Slots | Valid PM2.5 Obs | Missing Rate |
+|:---:|---|---|:---:|:---:|:---:|:---:|:---:|
+| **3409479** | Mindspace-Malad West, Mumbai - MPCB | Western Suburbs (Commercial / Coastal) | 19.1879°N | 72.8304°E | 2,880 | 2,473 | 14.1% |
+| **3409482** | Bandra Kurla Complex, Mumbai - MPCB | Central / Financial District | 19.0659°N | 72.8621°E | 2,880 | 2,423 | 15.9% |
+| **3409483** | Chembur, Mumbai - MPCB | Eastern Suburbs (Heavy Industrial) | 19.0365°N | 72.8954°E | 2,880 | 2,374 | 17.6% |
+| **3409486** | Kherwadi_Bandra East, Mumbai - MPCB | Western Highway Corridor (Heavy Traffic) | 19.0632°N | 72.8456°E | 2,880 | 2,472 | 14.2% |
+| **3409510** | Byculla, Mumbai - BMC | South Mumbai (High Density Residential) | 18.9767°N | 72.8380°E | 2,880 | 2,214 | 23.1% |
+| **3409511** | Shivaji Nagar, Mumbai - BMC | Eastern Suburbs / Deonar Corridor | 19.0605°N | 72.9234°E | 2,880 | 2,377 | 17.5% |
+| **3409512** | Kandivali West, Mumbai - BMC | Northern Suburbs | 19.2159°N | 72.8317°E | 2,880 | 1,878 | 34.8% |
+| **3409513** | Sewri, Mumbai - BMC | Eastern Harbor / Port Zone | 19.0001°N | 72.8567°E | 2,880 | 1,896 | 34.2% |
+| **3409514** | Ghatkopar, Mumbai - BMC | Central Eastern Suburbs | 19.0837°N | 72.9210°E | 2,880 | 2,458 | 14.6% |
+
+---
+
+## 4. Dataset Dimensions & Quality Audit
+
+The table below summarizes the quantitative cleaning audit generated by [`aera/clean.py`](file:///C:/Users/brije/Documents/PROJECTS/aera/aera/clean.py):
+
+| Metric Description | Quantitative Count | Percentage / Rate |
+|---|:---:|:---:|
+| **Total Potential Grid Slots** (9 stations $\times$ 2,880 hours) | 25,920 | 100.0% |
+| **Raw Ingested PM2.5 Rows** (before cleaning) | 19,989 | 77.1% |
+| **Impossible Outlier Readings Excised** ($<0$ or $>1000\,\mu\text{g/m}^3$) | 83 | 0.32% |
+| **Sensor Flatline / Stuck Readings Excised** ($\ge 6$ identical consecutive) | 135 | 0.52% |
+| **Short Telemetry Gaps Filled** ($\le 3$ hours via linear time interpolation) | 794 | 3.06% |
+| **Valid Usable PM2.5 Observations** (in `data/processed/clean.parquet`) | **20,565** | **79.3%** |
+| **Unrecorded / Long Gap Slots Flagged** (`flag_gap = True`) | 5,355 | 20.7% |
+| **Joined Surface Meteorology Rows** (Open-Meteo ERA5) | 2,880 | 99.8% match |
+
+### Temporal Breakdown of Missing Data
+Missing sensor data is not evenly distributed across months:
+- **November 2025:** 9.8% missing
+- **December 2025:** 11.5% missing
+- **January 2026:** **38.4% missing** *(highest sensor downtime across the network)*
+- **February 2026 (Held-Out Test Block):** 22.7% missing
+
+Missingness is virtually uniform across the diurnal cycle (18% to 23% missing for each individual hour of the day), confirming that missing values are caused by network or sensor power failures rather than time-of-day reporting biases.
+
+---
+
+## 5. Artifact Directory Structure
+
+CityPulse enforces strict separation between raw, processed, sample, and output artifacts:
+
+| Directory | Persistence & Git Status | Contents & Purpose |
+|---|---|---|
+| [`data/sample/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/sample/) | **Committed to Git** | 3-station, 30-day representative real sample (`pm25_sample.parquet`, `weather_sample.parquet`, `metadata.json`) enabling zero-key offline testing. |
+| [`data/processed/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/processed/) | **Committed to Git** | Fully cleaned and validated feature tables (`pm25_observed.parquet`, `weather_observed.parquet`, `clean.parquet`, `features.parquet`). |
+| [`data/outputs/`](file:///C:/Users/brije/Documents/PROJECTS/aera/data/outputs/) | **Committed to Git** | Model metrics (`model_metrics.json`), baseline comparisons (`baseline_metrics.json`), station predictions, SHAP explanations, patterns, and printable brief. |
+| `data/raw/` | **Git-Ignored** | Unprocessed OpenAQ gzip archives and raw Open-Meteo API query responses. |
+
+---
+
+## 6. Known Data Limitations & Operational Boundaries
+
+1. **Station Density:** 9 continuous monitoring stations represent an urban expanse of over 600 square kilometers. Hyper-local street canyon concentrations may vary substantially from the nearest sensor.
+2. **Single Meteorological Grid:** Surface weather features are indexed to a single central coordinate (19.076°N, 72.8777°E). While synoptic wind speeds and temperatures are consistent, coastal sea-breeze fronts may arrive 30 to 60 minutes earlier at coastal stations like Sewri than at inland stations like Ghatkopar.
+3. **Historical Weather Proxy:** Future 24-hour meteorological features ($t+24\text{h}$ wind speed and boundary layer height) are taken from ERA5 historical reanalysis rather than real-time operational numerical weather forecasts.
+4. **Seasonal Exclusivity:** The dataset spans winter inversion months (Nov 2025 to Feb 2026). Particulate dynamics during the Indian summer (pre-monsoon dust transport) and summer monsoon (heavy precipitation washout) are not captured in this dataset.
+5. **Permissible High Readings:** Sensor readings up to $991.94\,\mu\text{g/m}^3$ are retained under the $<1000\,\mu\text{g/m}^3$ threshold. While high spikes occur during intense local combustion or dust episodes, some may represent transient unflagged sensor noise.

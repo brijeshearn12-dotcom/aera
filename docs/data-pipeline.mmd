@@ -1,0 +1,73 @@
+flowchart TD
+    subgraph S1_Raw["Step 1: Raw Data Acquisition"]
+        A1["OpenAQ S3 Archive<br/><code>s3://openaq-data-archive/</code>"] -->|"fetch_data.py"| B1["data/raw/openaq/{station_id}/*.csv.gz<br/>19,989 raw hourly rows"]
+        A2["Open-Meteo Weather API<br/><code>archive-api.open-meteo.com</code>"] -->|"fetch_data.py"| B2["data/raw/weather/open_meteo_weather_*.json<br/>2,880 hourly meteorology rows"]
+    end
+
+    subgraph S2_Ingestion["Step 2: Parsing & Timezone Alignment"]
+        B1 -->|"UTC to IST (Asia/Kolkata)"| C1["data/processed/pm25_observed.parquet"]
+        B2 -->|"UTC to IST (Asia/Kolkata)"| C2["data/processed/weather_observed.parquet"]
+    end
+
+    subgraph S3_Cleaning["Step 3: QA/QC & Anomaly Cleansing (aera/clean.py)"]
+        C1 & C2 --> D1["1-hour Regular Grid Reindexing (25,920 slots)"]
+        D1 --> D2["Remove Impossible Values (&lt;0 or &gt;1000 ug/m3) [83 removed]"]
+        D2 --> D3["Remove Sensor Stuck Values (&gt;=6 identical) [135 removed]"]
+        D3 --> D4["Fill Short Gaps (&le;3h) via Linear Interpolation [794 filled]"]
+        D4 --> D5["Flag Long Gaps (&gt;3h) as Unrecorded (flag_gap) [5,355 missing]"]
+        D5 --> D6["Compute Station Data Quality Rating (Good, Fair, Low)"]
+        D6 --> E1["data/processed/clean.parquet<br/>20,565 valid PM2.5 observations (79.3%)"]
+    end
+
+    subgraph S4_Patterns["Step 4: Pattern Extraction (aera/patterns.py)"]
+        E1 --> F1["90-Day Diurnal Cycle Analysis<br/>08:00 Peak (57.8 ug/m3, +15.1%)"]
+        E1 --> F2["Calm Wind Stagnation (<=4.8 km/h)<br/>Mean 58.9 vs 49.2 ug/m3 (+19.7%)"]
+        E1 --> F3["Corridor Exceedance Rates<br/>Kherwadi 46.7%, Byculla 43.3%"]
+        F1 & F2 & F3 --> G1["data/outputs/patterns.json"]
+        F1 --> G2["data/outputs/heatmap.parquet"]
+    end
+
+    subgraph S5_Features["Step 5: Feature Engineering (aera/features.py)"]
+        E1 --> H1["Lags: t-1, t-3, t-6, t-12, t-24"]
+        E1 --> H2["Rolling Stats: 6h & 24h Mean and Max"]
+        E1 --> H3["Cyclic Calendar: Hour of Day, Day of Week"]
+        E1 --> H4["Meteorology: Wind Speed, Dir Sin/Cos, Temp, RH, BLH, Rain Sum"]
+        E1 --> H5["⚠️ Weather Stand-In: t+24h ERA5 Wind Speed & BLH"]
+        H1 & H2 & H3 & H4 & H5 --> H6["Targets: Continuous PM2.5 (t+24h) & Risk Class"]
+        H6 --> I1["data/processed/features.parquet<br/>(18,205 rows with valid feature windows)"]
+    end
+
+    subgraph S6_Training["Step 6: Chronological Evaluation & Training (aera/train.py)"]
+        I1 --> J1["Chronological Split (Strictly Time-Ordered)"]
+        J1 -->|"Train: Nov 1, 2025 - Jan 31, 2026 (14,551 rows)"| K1["Fit LightGBM Regressor (models/reg.joblib)"]
+        J1 -->|"Train: Nov 1, 2025 - Jan 31, 2026 (14,551 rows)"| K2["Fit Balanced LightGBM Classifier (models/clf.joblib)"]
+        J1 -->|"Test: Feb 1, 2026 - Feb 28, 2026 (3,654 rows)"| K3["Evaluate Persistence: MAE 11.82, F1 0.6251"]
+        J1 -->|"Test: Feb 1, 2026 - Feb 28, 2026 (3,654 rows)"| K4["Evaluate 24h Moving Avg: MAE 12.86, F1 0.5432"]
+        K1 & K2 & K3 & K4 --> L1["data/outputs/model_metrics.json"]
+        K3 & K4 --> L2["data/outputs/baseline_metrics.json"]
+    end
+
+    subgraph S7_Explainability["Step 7: Explainability & Uncertainty (aera/explain.py)"]
+        K1 & K2 & I1 --> M1["TreeSHAP Feature Attribution<br/>Top 3 Drivers mapped to plain language"]
+        K1 & I1 --> M2["LightGBM 10% & 90% Quantile Regressors<br/>Raw coverage: 70.83%"]
+        M2 --> M3["Split Conformal Calibration on Holdout Validation<br/>delta = 4.67 ug/m3 -> 80.16% Empirical Coverage"]
+        M1 & M3 --> N1["data/outputs/predictions.parquet"]
+        M1 --> N2["data/outputs/explanations.parquet"]
+        M1 --> N3["data/outputs/quality_summary.parquet"]
+    end
+
+    subgraph S8_Recommendations["Step 8: Municipal Recommendation Engine (aera/recommend.py)"]
+        N1 & N2 --> O1["Priority Ranking Formula: (p_unhealthy + p_severe) x weight"]
+        O1 --> O2["Assign Deterministic Municipal Rules (Mist cannons, anti-smog guns, dust halt)"]
+        O2 --> P1["data/outputs/ranked_stations.parquet"]
+    end
+
+    subgraph S9_Brief["Step 9: Executive Brief Generation (aera/brief.py)"]
+        P1 & G1 & L1 --> Q1["templates/brief.html.j2 (Jinja2)"]
+        Q1 --> Q2["data/outputs/brief.html"]
+        Q2 -->|"Headless Browser Capture"| Q3["data/outputs/brief.png"]
+    end
+
+    subgraph S10_Dashboard["Step 10: Streamlit Dashboard (app.py, ui/)"]
+        N1 & N2 & P1 & G1 & G2 & E1 & L1 --> R1["Interactive Streamlit Dashboard (localhost:8501 / Streamlit Cloud)<br/>- Left 60%: Interactive Folium Map + D5 Chart with 80% Uncertainty Band + SHAP Drivers<br/>- Right 40%: Ranked Interventions + Telemetry Alerts<br/>- Footer Strip: Patterns Strip + Collapsible Diurnal Heatmap + Brief Download"]
+    end

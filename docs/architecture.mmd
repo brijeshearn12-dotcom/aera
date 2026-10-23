@@ -1,0 +1,63 @@
+graph TD
+    subgraph Data_Sources["1. Primary External Data Sources"]
+        S3["OpenAQ Public S3 Archive<br/><code>s3://openaq-data-archive/</code><br/>9 CAAQMS Stations (Mumbai)"]
+        OM["Open-Meteo Historical Weather API<br/><code>archive-api.open-meteo.com</code><br/>ERA5 Reanalysis Grid (19.076N, 72.878E)"]
+        OM_Standin["⚠️ Historical Weather Stand-In<br/>ERA5 t+24h Reanalysis Observations<br/>(Used as proxy for 24h weather forecast)"]
+    end
+
+    subgraph Ingestion_Cleaning["2. Ingestion & Quality Assurance"]
+        FETCH["aera/fetch_data.py<br/>Download hourly PM2.5 & weather<br/>UTC to Asia/Kolkata (IST) conversion"]
+        CLEAN["aera/clean.py<br/>- 1-hour regular grid reindexing<br/>- Impossible filter: <0 or >1000 ug/m3<br/>- Stuck filter: >=6 identical values<br/>- Short gap fill: linear interp <=3h<br/>- Long gap flagging: flag_gap (>3h)<br/>- Quality metrics: Good, Fair, Low"]
+    end
+
+    subgraph Feature_Engineering["3. Feature Engineering"]
+        FEAT["aera/features.py (22 Causal + 2 Stand-Ins)<br/>- PM2.5 Lags: t-1, t-3, t-6, t-12, t-24<br/>- Rolling: 6h & 24h mean & max<br/>- Cyclical: hour of day, day of week<br/>- Meteorology: wind speed, dir sin/cos, temp, rh, blh, precip<br/>- Stand-in forecast weather: wind speed & blh at t+24h"]
+    end
+
+    subgraph Modeling_Baselines["4. Modeling & Baseline Evaluation"]
+        SPLIT["Chronological Split (Never Shuffled)<br/>Train: Nov 1, 2025 – Jan 31, 2026 (14,551 rows)<br/>Test: Feb 1, 2026 – Feb 28, 2026 (3,654 rows)"]
+        PERSIST["Persistence Baseline<br/>y_pred(t+24h) = y(t)<br/>MAE: 11.82 | F1: 0.6251"]
+        MOVAVG["24h Moving Average Baseline<br/>y_pred(t+24h) = mean(y_t-23:t)<br/>MAE: 12.86 | F1: 0.5432"]
+        LGBM_REG["LightGBM Regressor (100 trees)<br/>Continuous PM2.5 (ug/m3)<br/>MAE: 13.00 | RMSE: 17.06"]
+        LGBM_CLF["LightGBM Multi-class Classifier<br/>Balanced weights (Good, Unhealthy, Severe)<br/>Macro F1: 0.7813 | Unhealthy F1: 0.6076"]
+    end
+
+    subgraph Explainability_Uncertainty["5. Explainability & Uncertainty Bands"]
+        SHAP["aera/explain.py (TreeSHAP)<br/>Attribution for top 3 positive & negative drivers<br/>Mapped to plain-language operational phrases"]
+        CONF["Quantile Models + Split Conformal Calibration<br/>LightGBM 10% & 90% quantiles (70.83% raw coverage)<br/>Conformal adjustment: delta = 4.67 ug/m3<br/>Final 80% Prediction Band: 80.16% empirical coverage"]
+    end
+
+    subgraph Pattern_Discovery["6. Empirical Pattern Discovery"]
+        PATTERNS["aera/patterns.py<br/>- Diurnal Peak: 08:00 IST (+15.1% vs median)<br/>- Calm-Wind Stagnation: <=4.8 km/h (+19.7% uplift)<br/>- Worst Corridors: Kherwadi (46.7%), Byculla (43.3%)"]
+    end
+
+    subgraph Recommendation_Engine["7. Operational Recommendation Engine"]
+        REC["aera/recommend.py<br/>Priority Score = (p_unhealthy + p_severe) x weight<br/>Deterministic Action Rules: Anti-smog guns, mist cannons,<br/>dust barriers, traffic diversions, school advisories"]
+    end
+
+    subgraph User_Interfaces["8. Delivery & Presentation Interfaces"]
+        DASH["app.py / Streamlit Dashboard<br/>- 60/40 Flat Apple/Linear UI (WCAG AA >= 4.5:1)<br/>- Interactive Folium Mumbai Station Map<br/>- D5 Time-Series Chart (past 24h actuals + t+24h band)<br/>- Plain-language SHAP drivers<br/>- Ranked municipal interventions & telemetry alerts<br/>- Diurnal heatmap & patterns strip"]
+        BRIEF["aera/brief.py / brief.html.j2<br/>One-Page A4 Printable Municipal Brief<br/>(White-background CSS + brief.png)"]
+    end
+
+    S3 --> FETCH
+    OM --> FETCH
+    OM_Standin --> FEAT
+    FETCH --> CLEAN
+    CLEAN --> FEAT
+    CLEAN --> PATTERNS
+    FEAT --> SPLIT
+    SPLIT --> PERSIST
+    SPLIT --> MOVAVG
+    SPLIT --> LGBM_REG
+    SPLIT --> LGBM_CLF
+    LGBM_REG --> CONF
+    LGBM_CLF --> SHAP
+    LGBM_CLF --> REC
+    CONF --> REC
+    SHAP --> DASH
+    CONF --> DASH
+    REC --> DASH
+    REC --> BRIEF
+    PATTERNS --> DASH
+    PATTERNS --> BRIEF
