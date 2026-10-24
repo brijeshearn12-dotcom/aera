@@ -4,3 +4,6 @@ primaryColor = "#0071E3"
 backgroundColor = "#FFFFFF"
 secondaryBackgroundColor = "#F5F5F7"
 textColor = "#1D1D1F"
+
+[client]
+showErrorDetails = true

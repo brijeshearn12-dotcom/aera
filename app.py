@@ -12,10 +12,17 @@ Interactive operational dashboard implementing:
 from __future__ import annotations
 
 import html
+import importlib
 import json
+import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
+
+# Ensure repository root is on sys.path for robust Streamlit Cloud execution
+_REPO_ROOT = Path(__file__).resolve().parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
 
 import pandas as pd
 import streamlit as st
@@ -29,7 +36,13 @@ from aera.vulnerability import evaluate_hospital_surge, get_ward_demographics
 from aera.simulations import simulate_countermeasure, INTERVENTIONS
 from aera.directives import generate_bmc_action_directive
 from ui.charts import render_diurnal_heatmap, render_station_forecast_chart
-from ui.components import big_number, card, demographic_card, quality_badge, risk_pill
+try:
+    from ui.components import big_number, card, demographic_card, quality_badge, risk_pill
+except ImportError:
+    if "ui.components" in sys.modules:
+        import ui.components
+        importlib.reload(ui.components)
+    from ui.components import big_number, card, demographic_card, quality_badge, risk_pill
 from ui.map_view import create_station_map
 
 # -----------------------------------------------------------------------------
