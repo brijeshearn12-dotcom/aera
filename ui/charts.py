@@ -26,8 +26,10 @@ def render_station_forecast_chart(
     clean_history: Optional[pd.DataFrame],
     station_row: pd.Series,
     hours_history: int = 24,
+    simulation_data: Optional[dict] = None,
 ) -> go.Figure:
     """Render the official 24h historical actuals + t+24h forecast point chart.
+    Optionally overlays counterfactual post-intervention trajectory.
 
     Parameters
     ----------
@@ -37,6 +39,8 @@ def render_station_forecast_chart(
         Current station row containing predicted_pm25, lower, upper, predicted_class, as_of.
     hours_history : int
         Number of prior hours of ground observations to plot (default: 24).
+    simulation_data : dict, optional
+        Simulation output containing trajectory_df, counterfactual_endpoint, etc.
 
     Returns
     -------
@@ -66,7 +70,8 @@ def render_station_forecast_chart(
 
     # Parse as_of timestamp
     try:
-        as_of_dt = pd.to_datetime(as_of_str)
+        clean_as_of = as_of_str.replace(" IST", "+05:30").strip()
+        as_of_dt = pd.to_datetime(clean_as_of)
     except Exception:
         as_of_dt = pd.Timestamp.now(tz="Asia/Kolkata")
 
@@ -74,6 +79,8 @@ def render_station_forecast_chart(
 
     # 1. Historical Actual Observations (Past 24 Hours)
     has_history = False
+    last_hist_dt = as_of_dt
+    last_hist_val = pred_val
     if clean_history is not None and not clean_history.empty:
         # Filter to prior hours up to as_of
         ts_col = clean_history["timestamp"]
@@ -82,6 +89,8 @@ def render_station_forecast_chart(
 
         if not hist_df.empty:
             has_history = True
+            last_hist_dt = hist_df.iloc[-1]["timestamp"]
+            last_hist_val = float(hist_df.iloc[-1]["pm25"])
             fig.add_trace(
                 go.Scatter(
                     x=hist_df["timestamp"],
@@ -94,7 +103,66 @@ def render_station_forecast_chart(
                 )
             )
 
-    # 2. Forecast Point at t+24h with 80% Conformal Prediction Band
+    # 2. Simulation / Counterfactual Trajectory Overlay (If active)
+    has_sim = False
+    max_curve_val = upper
+    if simulation_data and "trajectory_df" in simulation_data:
+        traj_df = simulation_data["trajectory_df"]
+        if traj_df is not None and not traj_df.empty:
+            has_sim = True
+            cf_endpoint = float(simulation_data.get("counterfactual_endpoint", pred_val))
+            drop_pct = float(simulation_data.get("effective_reduction_pct", 0.0))
+
+            x_traj = [last_hist_dt] + traj_df["timestamp"].tolist()
+            y_base = [last_hist_val] + traj_df["baseline_pm25"].tolist()
+            y_cf = [last_hist_val] + traj_df["counterfactual_pm25"].tolist()
+
+            max_curve_val = max(max_curve_val, max(y_base))
+
+            # Baseline 24h projection curve
+            fig.add_trace(
+                go.Scatter(
+                    x=x_traj,
+                    y=y_base,
+                    mode="lines",
+                    name="Baseline 24h Forecast",
+                    line=dict(color="#64748B", width=2, dash="dash"),
+                    hovertemplate="<b>Baseline Projected:</b> %{y:.1f} µg/m³<br>%{x|%b %d, %H:%M IST}<extra></extra>",
+                )
+            )
+
+            # Counterfactual post-intervention curve
+            fig.add_trace(
+                go.Scatter(
+                    x=x_traj,
+                    y=y_cf,
+                    mode="lines",
+                    name=f"Counterfactual (-{drop_pct:.0f}%)",
+                    line=dict(color="#10B981", width=3),
+                    fill="tonexty",
+                    fillcolor="rgba(16, 185, 129, 0.12)",
+                    hovertemplate="<b>Counterfactual:</b> %{y:.1f} µg/m³<br>%{x|%b %d, %H:%M IST}<extra></extra>",
+                )
+            )
+
+            # Counterfactual diamond marker at t+24h (marker only, no extra legend line)
+            fig.add_trace(
+                go.Scatter(
+                    x=[forecast_dt],
+                    y=[cf_endpoint],
+                    mode="markers",
+                    name="Mitigated t+24h",
+                    showlegend=False,
+                    marker=dict(size=12, color="#10B981", symbol="diamond"),
+                    hovertemplate=(
+                        f"<b>Post-Intervention Forecast:</b> {cf_endpoint:.1f} µg/m³<br>"
+                        f"Abatement: -{pred_val - cf_endpoint:.1f} µg/m³ (-{drop_pct:.1f}%)<br>"
+                        f"Target Time: %{{x|%b %d, %H:%M IST}}<extra></extra>"
+                    ),
+                )
+            )
+
+    # 3. Forecast Point at t+24h with 80% Conformal Prediction Band
     err_plus = [max(0.0, upper - pred_val)]
     err_minus = [max(0.0, pred_val - lower)]
 
@@ -103,7 +171,8 @@ def render_station_forecast_chart(
             x=[forecast_dt],
             y=[pred_val],
             mode="markers",
-            name="Forecast at t+24h (with 80% Conformal Band)",
+            name="Forecast at t+24h (80% CI)",
+            showlegend=not has_sim,
             marker=dict(size=12, color="#0071E3", symbol="diamond"),
             error_y=dict(
                 type="data",
@@ -115,11 +184,32 @@ def render_station_forecast_chart(
                 width=10,
             ),
             hovertemplate=(
-                f"<b>24h Forecast:</b> {pred_val:.1f} µg/m³<br>"
+                f"<b>24h Point Forecast:</b> {pred_val:.1f} µg/m³<br>"
                 f"80% Interval: [{lower:.1f} – {upper:.1f}] µg/m³<br>"
                 f"Target Time: %{{x|%b %d, %H:%M IST}}<extra></extra>"
             ),
         )
+    )
+
+    # Vertical dividing line separating Observed Past 24h from Future 24h
+    fig.add_shape(
+        type="line",
+        x0=as_of_dt,
+        x1=as_of_dt,
+        y0=0,
+        y1=1,
+        yref="paper",
+        line=dict(color="#8E8E93", width=1.5, dash="dot"),
+    )
+    fig.add_annotation(
+        x=as_of_dt,
+        y=1,
+        yref="paper",
+        text="Now (Forecast Origin)",
+        showarrow=False,
+        xanchor="left",
+        yanchor="top",
+        font=dict(size=10, color="#6E6E73", family=FONT_FAMILY),
     )
 
     # Threshold horizontal reference lines
@@ -138,10 +228,20 @@ def render_station_forecast_chart(
         annotation_position="top right",
     )
 
-    max_y = max(upper * 1.15, 80.0)
+    max_y = max(max_curve_val * 1.15, 80.0)
+    chart_title = (
+        "<b>24-Hour Observed Air Quality & Intervention Counterfactual</b>"
+        if has_sim
+        else "<b>24-Hour Observed Air Quality & Forward Forecast Point</b>"
+    )
+    x_range = [
+        as_of_dt - pd.Timedelta(hours=hours_history, minutes=30),
+        forecast_dt + pd.Timedelta(hours=1, minutes=30),
+    ]
+
     fig.update_layout(
         title=dict(
-            text="<b>24-Hour Observed Air Quality & Forward Forecast Point</b>",
+            text=chart_title,
             font=dict(size=14, family=FONT_FAMILY),
         ),
         xaxis=dict(
@@ -149,6 +249,7 @@ def render_station_forecast_chart(
             showgrid=True,
             gridcolor="#E5E5EA",
             zeroline=False,
+            range=x_range,
         ),
         yaxis=dict(
             title="PM2.5 (µg/m³)",
@@ -158,9 +259,16 @@ def render_station_forecast_chart(
             range=[0, max_y],
         ),
         template="plotly_white",
-        height=320,
-        margin=dict(l=45, r=30, t=50, b=40),
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1, font=dict(size=10)),
+        height=360,
+        margin=dict(l=45, r=30, t=50, b=75),
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.22,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=11, family=FONT_FAMILY),
+        ),
     )
 
     return fig

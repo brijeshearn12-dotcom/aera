@@ -11,6 +11,7 @@ Interactive operational dashboard implementing:
 
 from __future__ import annotations
 
+import html
 import json
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,8 +25,11 @@ from config import (
     OUTPUTS_DIR,
     PROCESSED_DATA_DIR,
 )
+from aera.vulnerability import evaluate_hospital_surge, get_ward_demographics
+from aera.simulations import simulate_countermeasure, INTERVENTIONS
+from aera.directives import generate_bmc_action_directive
 from ui.charts import render_diurnal_heatmap, render_station_forecast_chart
-from ui.components import big_number, card, quality_badge, risk_pill
+from ui.components import big_number, card, demographic_card, quality_badge, risk_pill
 from ui.map_view import create_station_map
 
 # -----------------------------------------------------------------------------
@@ -281,13 +285,17 @@ with col_map:
         p_pill = risk_pill(pred_cls)
         q_badge = quality_badge(q_label)
 
+        # Retrieve Ward Vulnerability & Catchment Hospital Surge
+        ward_info = get_ward_demographics(active_st_id)
+        surge_info = evaluate_hospital_surge(pred_val, pred_cls, ward_info)
+
         st.markdown(
             f"""
-            <div style="background: #F5F5F7; border: 1px solid #D2D2D7; border-radius: 12px; padding: 16px 20px; margin-bottom: 16px;">
+            <div style="background: #F5F5F7; border: 1px solid #D2D2D7; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
                 <div>
                   <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1D1D1F;">{st_name}</h3>
-                  <span style="font-size: 12px; color: #6E6E73;">Station ID: {active_st_id} • Mumbai Monitoring Corridor</span>
+                  <span style="font-size: 12px; color: #6E6E73;">Station ID: {active_st_id} • BMC Ward {ward_info.get('ward_code')} ({ward_info.get('ward_name')})</span>
                 </div>
                 <div style="display: flex; gap: 8px; align-items: center;">
                   {p_pill}
@@ -311,11 +319,99 @@ with col_map:
             unsafe_allow_html=True,
         )
 
-        # 24h Time-Series Forecast Chart (D5: past 24h actuals + single forecast point with band)
-        station_clean_history = (
-            clean_df[clean_df["station_id"] == active_st_id] if not clean_df.empty else None
+        # ---------------------------------------------------------------------
+        # Feature 3: Ward Health & Vulnerability Exposure Gauge (Directly Below Station Card)
+        # ---------------------------------------------------------------------
+        st.markdown(demographic_card(ward_info, surge_info), unsafe_allow_html=True)
+
+        # ---------------------------------------------------------------------
+        # Feature 1: "What-If" Municipal Intervention Simulator
+        # ---------------------------------------------------------------------
+        with st.container(border=True):
+            st.markdown(
+                """
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                  <span style="font-size: 14px; font-weight: 700; color: #0F172A;">🎛 Simulate BMC Countermeasure</span>
+                  <span style="font-size: 11px; color: #64748B; background: #E2E8F0; padding: 2px 8px; border-radius: 6px; font-weight: 600;">Interactive Policy Modeling</span>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+            sim_col1, sim_col2 = st.columns([3, 2], gap="small")
+            with sim_col1:
+                intervention_options = {
+                    "sprinklers": "💧 Anti-Smog Water Sprinklers & Mist Cannons (-12% PM2.5)",
+                    "construction": "🚧 Enforce Construction Dust Stoppage (-18% PM2.5)",
+                    "freight": "🚚 Heavy Commercial Vehicle Peak Diversion (-15% PM2.5)",
+                    "combined": "⚡ Integrated Municipal Emergency Package (-35% PM2.5)",
+                }
+                selected_interv_key = st.selectbox(
+                    "Select Municipal Intervention:",
+                    options=list(intervention_options.keys()),
+                    index=1,
+                    format_func=lambda k: intervention_options[k],
+                    key=f"sim_select_{active_st_id}",
+                )
+            with sim_col2:
+                compliance_val = st.slider(
+                    "Intervention Compliance Level (%):",
+                    min_value=50,
+                    max_value=100,
+                    value=80,
+                    step=5,
+                    key=f"sim_slider_{active_st_id}",
+                    help="Projected enforcement adherence across ward checkpoints and construction sites.",
+                )
+
+            # Compute simulation counterfactual
+            station_clean_history = (
+                clean_df[clean_df["station_id"] == active_st_id] if not clean_df.empty else None
+            )
+            sim_result = simulate_countermeasure(
+                station_id=active_st_id,
+                station_row=st_row,
+                intervention_key=selected_interv_key,
+                compliance_pct=compliance_val,
+                heatmap_df=heatmap_df,
+                clean_history=station_clean_history,
+            )
+
+            cf_end = sim_result["counterfactual_endpoint"]
+            eff_drop = sim_result["absolute_drop_pm25"]
+            eff_pct = sim_result["effective_reduction_pct"]
+            cit_spared = sim_result["citizens_spared"]
+            hrs_averted = sim_result["hours_averted"]
+
+            st.markdown(
+                f"""
+                <div class="cp-sim-metrics" style="margin-top: 8px;">
+                  <div class="cp-sim-metric-card" style="border-left: 3px solid #10B981;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">Estimated Citizens Spared Severe Exposure</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #10B981; margin: 2px 0;">~{cit_spared:,} residents</div>
+                    <div style="font-size: 11px; color: #6E6E73;">Ward {ward_info.get('ward_code')} population shielded</div>
+                  </div>
+                  <div class="cp-sim-metric-card" style="border-left: 3px solid #0071E3;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">Hours of Severe Breach Averted</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #0071E3; margin: 2px 0;">{hrs_averted:.1f} hrs</div>
+                    <div style="font-size: 11px; color: #6E6E73;">Morning inversion spike flattened</div>
+                  </div>
+                  <div class="cp-sim-metric-card" style="border-left: 3px solid #6E6E73;">
+                    <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">Mitigated Concentration</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #1D1D1F; margin: 2px 0;">{cf_end:.1f} µg/m³</div>
+                    <div style="font-size: 11px; color: #135E26; font-weight: 600;">-{eff_drop:.1f} µg/m³ (-{eff_pct:.0f}%)</div>
+                  </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # 24h Time-Series Forecast Chart with Green Counterfactual Curve Overlay
+        forecast_fig = render_station_forecast_chart(
+            station_clean_history,
+            st_row,
+            simulation_data=sim_result,
         )
-        forecast_fig = render_station_forecast_chart(station_clean_history, st_row)
         st.plotly_chart(forecast_fig, use_container_width=True, config={"displayModeBar": False})
 
         # Top 3 Plain-Language Feature Drivers (SHAP)
@@ -328,7 +424,7 @@ with col_map:
 
         st.markdown(
             f"""
-            <div class="cp-card">
+            <div class="cp-card" style="margin-bottom: 14px;">
               <div class="cp-card-title">Key Environmental Drivers (SHAP Attribution)</div>
               <div class="cp-card-body">
                 <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
@@ -344,6 +440,50 @@ with col_map:
             """,
             unsafe_allow_html=True,
         )
+
+        # ---------------------------------------------------------------------
+        # Feature 2: 1-Click "BMC Ward Action Directive" Generator
+        # ---------------------------------------------------------------------
+        directive_data = generate_bmc_action_directive(
+            station_id=active_st_id,
+            station_row=st_row,
+            simulation_result=sim_result,
+        )
+
+        st.markdown(
+            """
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; margin-bottom: 6px;">
+              <span style="font-size: 14px; font-weight: 700; color: #1D1D1F;">📋 Official BMC Ward Action Directive</span>
+              <span style="font-size: 11px; color: #6E6E73;">Executive Municipal Enforcement Order (MMC Act §368)</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        directive_state_key = f"directive_view_active_{active_st_id}"
+        if directive_state_key not in st.session_state:
+            st.session_state[directive_state_key] = True  # Visible by default for instant 1-click impact!
+
+        dir_c1, dir_c2 = st.columns([3, 2], gap="small")
+        with dir_c1:
+            btn_text = "🔄 Refresh Directive Memo" if st.session_state[directive_state_key] else "📋 Generate Official BMC Action Directive"
+            if st.button(btn_text, key=f"btn_toggle_dir_{active_st_id}", use_container_width=True, type="primary"):
+                st.session_state[directive_state_key] = True
+                st.toast(f"✅ Generated executive action order for Ward {ward_info.get('ward_code')}!")
+        with dir_c2:
+            st.download_button(
+                label="📥 Export Order (.txt)",
+                data=directive_data["full_text"],
+                file_name=f"BMC_Directive_Ward_{ward_info.get('ward_code').replace('/', '')}_{active_st_id}.txt",
+                mime="text/plain",
+                use_container_width=True,
+                key=f"dl_dir_btn_{active_st_id}",
+            )
+
+        if st.session_state[directive_state_key]:
+            # Styled Executive Memo Block
+            st.code(directive_data["full_text"], language="text")
+            st.caption("📋 **1-Click Copy**: Click the copy icon in the top right corner of the memorandum box above to immediately copy the executive directive to your clipboard.")
     else:
         st.info("Insufficient data available for the selected monitoring station.")
 

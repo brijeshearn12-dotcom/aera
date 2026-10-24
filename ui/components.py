@@ -102,3 +102,59 @@ def big_number(value: Union[str, int, float], caption: str) -> str:
         f'<div class="cp-bignum-caption">{clean_caption}</div>'
         f'</div>'
     )
+
+
+def demographic_card(ward_info: dict, surge_info: dict) -> str:
+    """Render the official Demographic Vulnerability Card for a station's ward.
+
+    Parameters
+    ----------
+    ward_info : dict
+        Ward metadata containing school children, senior citizens, ward code/name.
+    surge_info : dict
+        Surge alert containing level, badge_color, badge_bg, and catchment.
+
+    Returns
+    -------
+    str
+        HTML string representing the demographic vulnerability card.
+    """
+    ward_code = html.escape(str(ward_info.get("ward_code", "K/East")))
+    ward_name = html.escape(str(ward_info.get("ward_name", "Mumbai Ward")))
+    school_children = int(ward_info.get("school_children_at_risk", 42000))
+    senior_citizens = int(ward_info.get("senior_citizens", 28500))
+    surge_level = html.escape(str(surge_info.get("level", "ELEVATED")))
+    badge_bg = surge_info.get("badge_bg", "#FFF4E5")
+    badge_color = surge_info.get("badge_color", "#8A4B00")
+    catchment = html.escape(str(surge_info.get("catchment", "Municipal General Hospital Catchment")))
+
+    return f"""
+    <div class="cp-vuln-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #E5E5EA; padding-bottom: 8px;">
+        <div>
+          <span style="font-size: 13px; font-weight: 700; color: #1D1D1F;">🏥 Ward Health & Vulnerability Exposure</span>
+          <span style="font-size: 12px; color: #6E6E73; margin-left: 6px;">(BMC Ward {ward_code} • {ward_name})</span>
+        </div>
+        <span style="background: {badge_bg}; color: {badge_color}; border: 1px solid {badge_color}40; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px;">
+          SURGE: {surge_level}
+        </span>
+      </div>
+      <div class="cp-vuln-grid">
+        <div class="cp-vuln-item">
+          <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">🏫 School Children at Risk</div>
+          <div style="font-size: 19px; font-weight: 700; color: #1D1D1F; margin-top: 2px;">{school_children:,}</div>
+          <div style="font-size: 11px; color: #86868B; margin-top: 2px;">Ages &le;14 in active school zones</div>
+        </div>
+        <div class="cp-vuln-item">
+          <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">🧓 Senior Citizen Population</div>
+          <div style="font-size: 19px; font-weight: 700; color: #1D1D1F; margin-top: 2px;">{senior_citizens:,}</div>
+          <div style="font-size: 11px; color: #86868B; margin-top: 2px;">Ages &ge;65 vulnerable cohort</div>
+        </div>
+        <div class="cp-vuln-item">
+          <div style="font-size: 11px; text-transform: uppercase; color: #6E6E73; font-weight: 600;">🏥 Respiratory Bed Surge Alert</div>
+          <div style="font-size: 14px; font-weight: 700; color: {badge_color}; margin-top: 2px;">{surge_level}</div>
+          <div style="font-size: 11px; color: #6E6E73; margin-top: 2px;">{catchment}</div>
+        </div>
+      </div>
+    </div>
+    """

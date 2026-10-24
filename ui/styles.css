@@ -269,3 +269,75 @@ button.cp-btn:disabled {
     text-align: center;
   }
 }
+
+/* Demographic Vulnerability Component */
+.cp-vuln-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E5EA;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+.cp-vuln-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.3fr;
+  gap: 12px;
+  margin-top: 10px;
+}
+@media (max-width: 900px) {
+  .cp-vuln-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.cp-vuln-item {
+  background: #F9F9FB;
+  border: 1px solid #E5E5EA;
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+/* Municipal What-If Simulator Panel */
+.cp-sim-panel {
+  background: #F8FAFC;
+  border: 1px solid #CBD5E1;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+}
+.cp-sim-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+@media (max-width: 768px) {
+  .cp-sim-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+.cp-sim-metric-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  text-align: left;
+}
+
+/* Executive Directive Memorandum View */
+.cp-memo-container {
+  background: #0F172A;
+  color: #E2E8F0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  border-radius: 8px;
+  padding: 16px 20px;
+  border: 1px solid #334155;
+  white-space: pre-wrap;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  max-height: 420px;
+  overflow-y: auto;
+}
